@@ -7,7 +7,7 @@ class Child extends Actor{
   
   def receive = {
     case Message(msg) => {
-      println(self + ": " + msg)
+      println(self.path + ": " + msg)
       sender ! Message("pong")
     }
   }
