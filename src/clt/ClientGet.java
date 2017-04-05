@@ -35,18 +35,30 @@ public class ClientGet {
 		URI baseURI = UriBuilder.fromUri("http://" + hostname + "/").build();
 		WebTarget target = client.target(baseURI);
 
+		//Test #1 [MAIN]
 		String value = target.path("/server")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
 				.get(String.class);
-
-		System.err.println("Value: " + value);
+		System.out.println("Call: /server ; Response: " + value);
 		
+		//Test #2 [PUTSET]
 		Response key = target.path("/server/putset")
-				.request().header("key", "jadhgagj").post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
+				.request().header("key", "mykey").post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
+		System.out.println("Call: /server/putset ; Response: "+ key.getEntity());
 		
-		System.err.println("Key:");
-		System.err.println(key.getEntity());
+		//Test #3 [GETSET]
+		Response set = target.path("/server/getset").request().header("key", "mykey").get();
+		System.out.println("Call: /server/getset ; Response: "+ set.getEntity());
+		
+		//Test #4 [READELEM]
+		Response elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").get();
+		System.out.println("Call: /server/readelem ; Response: " + elem.getEntity());
+		
+		//Test #5 [ISELEM]
+		Response iselem = target.path("/server/iselem").queryParam("elem", "two").request().header("key","mykey").get();
+		System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());
+					
 		
 	}
 
