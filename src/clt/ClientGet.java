@@ -1,9 +1,12 @@
 package clt;
 
 import Datatypes.*;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -34,8 +37,44 @@ public class ClientGet {
 
 		URI baseURI = UriBuilder.fromUri("http://" + hostname + "/").build();
 		WebTarget target = client.target(baseURI);
+		
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		boolean run = true;
+		while(run){
+			System.out.println("[0] Sair\n[1] Putset\n[2] Getset\n[3] ReadElem\n[4] isElem");
+	        String s = br.readLine();
+			switch(s){
+			case "0": run = false;
+					break;
+			case "1"://Test #1 [MAIN]
+				String value = target.path("/server")
+					.request()
+					.accept(MediaType.APPLICATION_JSON)
+					.get(String.class);
+				System.out.println("Call: /server ; Response: " + value);
+				break;
+			case "2"://Test #2 [PUTSET]
+				Response key = target.path("/server/putset")
+						.request().header("key", "mykey").post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
+				System.out.println("Call: /server/putset ; Response: "+ key.getEntity());
+				break;
+			case "3"://Test #3 [GETSET]
+				Response set = target.path("/server/getset").request().header("key", "mykey").get();
+				System.out.println("Call: /server/getset ; Response: "+ set.getEntity());
+				break;
+			case "4"://Test #4 [READELEM]
+				Response elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").get();
+				System.out.println("Call: /server/readelem ; Response: " + elem.getEntity());
+				break;
+			case "5"://Test #5 [ISELEM]
+				Response iselem = target.path("/server/iselem").queryParam("elem", "two").request().header("key","mykey").get();
+				System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());
+				break;
+			}
+			
+		}
 
-		//Test #1 [MAIN]
+		/*//Test #1 [MAIN]
 		String value = target.path("/server")
 				.request()
 				.accept(MediaType.APPLICATION_JSON)
@@ -57,7 +96,7 @@ public class ClientGet {
 		
 		//Test #5 [ISELEM]
 		Response iselem = target.path("/server/iselem").queryParam("elem", "two").request().header("key","mykey").get();
-		System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());
+		System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());*/
 					
 		
 	}
