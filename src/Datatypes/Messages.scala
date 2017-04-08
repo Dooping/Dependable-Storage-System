@@ -3,7 +3,7 @@ package Datatypes
 case class Tag(sn: Int, id: String) extends Ordered[Tag]{
   def compare(that: Tag) = {
     (this.sn) - (that.sn) match {
-      case 0 => this.id.compare(that.id)
+      case 0 => that.id.compare(this.id)
       case other => other
     }
   }
