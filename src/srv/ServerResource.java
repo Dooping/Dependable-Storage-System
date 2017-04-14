@@ -11,24 +11,41 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import Datatypes.*;
+import akka.actor.ActorSelection;
+import akka.actor.ActorSystem;
+import akka.dispatch.OnComplete;
+import akka.event.LoggingAdapter;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import org.glassfish.jersey.server.ManagedAsync;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+
+import messages.*;
 
 import org.json.*;
 
 @Path("/server")
 public class ServerResource {
 
+	@Context ActorSystem actorSystem;
 	String value = "default";
 	Entry dummyEntry = new Entry(1,"two",3,"four",5,"six");
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public String get() {
-		return value;
-	}
+    @ManagedAsync
+    public void asyncGet(@Suspended final AsyncResponse asyncResponse) {
+ 
+		asyncResponse.resume(Response.ok(dummyEntry,MediaType.APPLICATION_JSON).build());
+    }
 
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)

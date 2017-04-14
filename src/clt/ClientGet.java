@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.util.concurrent.Future;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManagerFactory;
@@ -23,6 +24,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.client.InvocationCallback;
 
 public class ClientGet {
 
@@ -41,17 +43,19 @@ public class ClientGet {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("[0] Sair\n[1] Putset\n[2] Getset\n[3] ReadElem\n[4] isElem");
+			System.out.println("[0] Sair\n[1] Get\n[2] Putset\n[3] Getset\n[4] ReadElem\n[5] isElem");
 	        String s = br.readLine();
 			switch(s){
 			case "0": run = false;
 					break;
-			case "1"://Test #1 [MAIN]
-				String value = target.path("/server")
+			case "1"://Test #1 [ASYNC]
+				final Future<Entry> value = target.path("/server")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
-					.get(String.class);
-				System.out.println("Call: /server ; Response: " + value);
+					.async()
+					.get(Entry.class);
+				System.out.println(value.get());
+				
 				break;
 			case "2"://Test #2 [PUTSET]
 				Response key = target.path("/server/putset")
