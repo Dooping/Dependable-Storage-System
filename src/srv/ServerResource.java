@@ -107,10 +107,13 @@ public class ServerResource {
 	@GET
 	@Path("/iselem")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response isElem(@HeaderParam("key")String key,@QueryParam("elem") String elem){
+	public Response isElem(@HeaderParam("key")String key, String json){
 		//In order to check if this element exists in list of values, how do we
 		//know if we should compare it with string or int when we have a list of Objects?
-		System.out.println("[ISELEM] Element:"+ elem + " Value: (need to check if elem exists)");
+		JSONObject o = new JSONObject(json);
+		Object obj = o.get("element");
+		System.out.println(obj);
+		System.out.println("[ISELEM] Element:"+ json + " Value: (need to check if elem exists)");
 		return Response.ok().build();
 	}
 
