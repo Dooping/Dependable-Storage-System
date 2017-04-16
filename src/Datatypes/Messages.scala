@@ -8,6 +8,8 @@ case class Tag(sn: Int, id: String) extends Ordered[Tag]{
     }
   }
 }
+case class APIWrite(nonce: Long, key: String, clientId: String, v: Entry)
+
 case class Read(nonce: Long, key: String)
 case class ReadTag(nonce: Long, key: String)
 case class Write(tag: Tag, v: Entry, sig: String, nonce: Long, key: String)
