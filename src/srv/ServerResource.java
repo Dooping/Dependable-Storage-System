@@ -38,6 +38,7 @@ public class ServerResource {
 	@Context ActorSystem actorSystem;
 	String value = "default";
 	Entry dummyEntry = new Entry(1,"two",3,"four",5,"six");
+
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -63,9 +64,8 @@ public class ServerResource {
 		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+		
 		System.out.println(proxy.pathString());
-	    //case class Tag(sn: Int, id: String) extends Ordered[Tag]{
-		//APIWrite(nonce: Long, key: String, clientId: String, v: Entry)
 		APIWrite write = new APIWrite(1234, "mykey","clientidip",dummyEntry);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
@@ -87,9 +87,28 @@ public class ServerResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/getset")
-	public Response getSet(@HeaderParam("key") String key){		
+	public void getSet(@HeaderParam("key") String key, @Suspended final AsyncResponse asyncResponse){		
 		System.out.println("[GETSET]");
-		return Response.ok(dummyEntry, MediaType.APPLICATION_JSON).build();
+		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+		
+		Read read = new Read(1234,"mykey");
+		Future<Object> future = Patterns.ask(proxy, read, timeout);
+		future.onComplete(new OnComplete<Object>() {
+
+            public void onComplete(Throwable failure, Object result) {
+            	//long res = (long)result;
+            	System.out.println(result);
+            	if(failure != null){
+            		if(failure.getMessage() != null)
+            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+            		else
+            			asyncResponse.resume(Response.serverError());
+            	}else
+            		asyncResponse.resume(Response.ok().entity(result).build());
+            }
+        }, actorSystem.dispatcher());
+		
 	}
 	
 	@POST
@@ -126,7 +145,7 @@ public class ServerResource {
 		return Response.ok(dummyEntry.getElem(pos), MediaType.APPLICATION_JSON).build();
 	}
 	
-	@GET
+	@POST
 	@Path("/iselem")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response isElem(@HeaderParam("key")String key, String json){

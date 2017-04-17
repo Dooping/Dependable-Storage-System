@@ -1,6 +1,7 @@
 package clt;
 
 import Datatypes.*;
+import tests.Benchmarks;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,11 +40,14 @@ public class ClientGet {
 
 		URI baseURI = UriBuilder.fromUri("http://" + hostname + "/").build();
 		WebTarget target = client.target(baseURI);
+		Benchmarks test = new Benchmarks(target); // for the benchmarks
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("[0] Sair\n[1] Get\n[2] Putset\n[3] Getset\n[4] ReadElem\n[5] isElem");
+			System.out.println("[0] Sair\n[1] Get\n[2] Putset\n[3] Getset\n[4]"
+					+ " ReadElem\n[5] isElem\n[6] Benchmark1\n[7] Benchmark2\n[8]"
+					+ " Benchmark3\n[9] Benchmark4\n[10] Benchmark5");
 	        String s = br.readLine();
 			switch(s){
 			case "0": run = false;
@@ -74,35 +78,22 @@ public class ClientGet {
 				Response iselem = target.path("/server/iselem").queryParam("elem", "two").request().header("key","mykey").get();
 				System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());
 				break;
+			case "6"://Test #6 [BENCHMARK1]
+				test.benchmark1();
+				break;
+			case "7"://Test #7 [BENCHMARK2]
+				test.benchmark2();
+				break;
+			case "8"://Test #7 [BENCHMARK3]
+				test.benchmark3();
+				break;
+			case "9"://Test #7 [BENCHMARK4]
+				test.benchmark4();
+				break;
 			}
 			
 		}
 
-		/*//Test #1 [MAIN]
-		String value = target.path("/server")
-				.request()
-				.accept(MediaType.APPLICATION_JSON)
-				.get(String.class);
-		System.out.println("Call: /server ; Response: " + value);
-		
-		//Test #2 [PUTSET]
-		Response key = target.path("/server/putset")
-				.request().header("key", "mykey").post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
-		System.out.println("Call: /server/putset ; Response: "+ key.getEntity());
-		
-		//Test #3 [GETSET]
-		Response set = target.path("/server/getset").request().header("key", "mykey").get();
-		System.out.println("Call: /server/getset ; Response: "+ set.getEntity());
-		
-		//Test #4 [READELEM]
-		Response elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").get();
-		System.out.println("Call: /server/readelem ; Response: " + elem.getEntity());
-		
-		//Test #5 [ISELEM]
-		Response iselem = target.path("/server/iselem").queryParam("elem", "two").request().header("key","mykey").get();
-		System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());*/
-					
-		
 	}
 
 	static public class InsecureHostnameVerifier implements HostnameVerifier {
