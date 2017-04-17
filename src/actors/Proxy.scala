@@ -8,6 +8,7 @@ import akka.routing.FromConfig
 import akka.actor.ActorSelection.toScala
 import scala.collection.mutable.{Set, HashMap}
 import security.Encryption
+import akka.routing.Broadcast
 
 class Proxy extends Actor {
   
@@ -15,16 +16,16 @@ class Proxy extends Actor {
   
   val requests = HashMap.empty[Long, Request]
   
-  val router1: ActorRef = context.actorOf(FromConfig.props(Props[Replica]), "router1")
+  val paths = List("akka.ssl.tcp://Spawner1@localhost:2552/user/r1", "akka.ssl.tcp://Spawner1@localhost:2552/user/r2")
   
-  val group = context.actorSelection("/user/proxy/router1/*")
+  val router1: ActorRef = context.actorOf(FromConfig.props(Props[Replica]), "router1")
   
   val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
   
   def receive = {
     case Read(nonce: Long, key: String) => {
       requests+=(nonce -> new Request(sender, "ReadStep1",null))
-      group ! Read(nonce, key)
+      router1 ! Broadcast(Read(nonce, key))
     }
     case ReadResult(tag: Tag, v: Entry, sig: String, nonce: Long, key: String) => {
         val request = requests(nonce)
@@ -37,7 +38,7 @@ class Proxy extends Actor {
               val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
               request.max = max
               request.quorum = Set.empty[Any]
-              group ! Write(max.tag, max.v, max.sig, nonce, key)
+              router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
             }
           }
           else
@@ -45,6 +46,7 @@ class Proxy extends Actor {
         }
       }
     case ReadTagResult(tag: Tag, sig: String, nonce: Long) => {
+      println(sender.path)
       println(self.path + ": recebeu ReadTagResult(tag:"+tag+",sig:"+sig+",nonce:"+nonce+")")
         val request = requests(nonce)
         if(request.rType == "WriteStep1"){
@@ -57,7 +59,7 @@ class Proxy extends Actor {
               request.quorum = Set.empty[Any]
               var newTag = Tag(max.tag.sn+1,request.id)
               val write = request.max.asInstanceOf[APIWrite]
-              group ! Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key)
+              router1 ! Broadcast(Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key))
             }
           }
           else
@@ -77,7 +79,7 @@ class Proxy extends Actor {
             request.quorum = Set.empty[Any]
             var newTag = Tag(max.tag.sn+1,request.id)
             val write = request.max.asInstanceOf[APIWrite]
-            group ! Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key)
+            router1 ! Broadcast(Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key))
           }
         }
     }
@@ -86,7 +88,7 @@ class Proxy extends Actor {
       val message = new Request(sender,"WriteStep1", id)
       message.max = APIWrite(nonce, key, id, v)
       requests+=(nonce -> message)
-      group ! ReadTag(nonce, key)
+      router1 ! Broadcast(ReadTag(nonce, key))
     }
     case Ack(nonce: Long) => {
       val tuple = (sender.path, Ack(nonce))
