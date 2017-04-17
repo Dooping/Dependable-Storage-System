@@ -19,6 +19,8 @@ class Proxy extends Actor {
   
   val group = context.actorSelection("/user/proxy/router1/*")
   
+  val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
+  
   def receive = {
     case Read(nonce: Long, key: String) => {
       requests+=(nonce -> new Request(sender, "ReadStep1",null))
@@ -27,7 +29,6 @@ class Proxy extends Actor {
     case ReadResult(tag: Tag, v: Entry, sig: String, nonce: Long, key: String) => {
         val request = requests(nonce)
         if(request.rType == "ReadStep1"){
-          val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
           if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
             val tuple = (sender.path, ReadResult(tag, v, sig, nonce, key))
             request.quorum += tuple
@@ -47,7 +48,6 @@ class Proxy extends Actor {
       println(self.path + ": recebeu ReadTagResult(tag:"+tag+",sig:"+sig+",nonce:"+nonce+")")
         val request = requests(nonce)
         if(request.rType == "WriteStep1"){
-          val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
           if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
             val tuple = (sender.path, ReadTagResult(tag, sig, nonce))
             request.quorum += tuple
@@ -77,7 +77,6 @@ class Proxy extends Actor {
             request.quorum = Set.empty[Any]
             var newTag = Tag(max.tag.sn+1,request.id)
             val write = request.max.asInstanceOf[APIWrite]
-            val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
             group ! Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key)
           }
         }

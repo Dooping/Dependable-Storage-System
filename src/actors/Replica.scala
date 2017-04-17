@@ -9,6 +9,7 @@ class Replica extends Actor{
   
   val map = HashMap.empty[String,(Entry, Tag, String)].withDefaultValue(null)
   println(self.path + " created")
+  val truststorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.trust-store")
   
   def receive = {
     case ReadTag(nonce: Long, key: String) => {
@@ -20,7 +21,6 @@ class Replica extends Actor{
     }
     
     case Write(new_tag: Tag, v: Any, sig: String, nonce: Long, key: String) => {
-      val truststorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.trust-store")
       Encryption.verifySign(truststorePath, new_tag.toString().getBytes(),sig, false)
       val tuple = map(key)
       if(tuple!=null){
