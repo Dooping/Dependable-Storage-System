@@ -7,6 +7,7 @@ import messages._
 import akka.routing.FromConfig
 import akka.actor.ActorSelection.toScala
 import scala.collection.mutable.{Set, HashMap}
+import security.Encryption
 
 class Proxy extends Actor {
   
@@ -26,32 +27,36 @@ class Proxy extends Actor {
     case ReadResult(tag: Tag, v: Entry, sig: String, nonce: Long, key: String) => {
         val request = requests(nonce)
         if(request.rType == "ReadStep1"){
-          //validate tag
-          val tuple = (sender.path, ReadResult(tag, v, sig, nonce, key))
-          request.quorum += tuple
-          if (request.quorum.size==minQuorum){
-            request.rType = "ReadStep2" 
-            val max = request.quorum.map(_.asInstanceOf[ReadResult]).toList.sortWith(_.tag > _.tag)(0)
-            request.max = max
-            request.quorum = Set.empty[(ActorPath, Any)]
-            group ! Write(max.tag, max.v, max.sig, nonce, key)
+          val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
+          if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
+            val tuple = (sender.path, ReadResult(tag, v, sig, nonce, key))
+            request.quorum += tuple
+            if (request.quorum.size==minQuorum){
+              request.rType = "ReadStep2" 
+              val max = request.quorum.map(_.asInstanceOf[ReadResult]).toList.sortWith(_.tag > _.tag)(0)
+              request.max = max
+              request.quorum = Set.empty[(ActorPath, Any)]
+              group ! Write(max.tag, max.v, max.sig, nonce, key)
+            }
           }
         }
       }
     case ReadTagResult(tag: Tag, sig: String, nonce: Long) => {
         val request = requests(nonce)
         if(request.rType == "WriteStep1"){
-          //validate tag
-          val tuple = (sender.path, ReadTagResult(tag, sig, nonce))
-          request.quorum += tuple
-          if (request.quorum.size==minQuorum){
-            request.rType = "WriteStep2"
-            request.max = WriteResult(nonce)
-            val max = request.quorum.map(_.asInstanceOf[ReadTagResult]).toList.sortWith(_.tag > _.tag)(0)
-            request.quorum = Set.empty[(ActorPath, Any)]
-            var newTag = Tag(max.tag.sn+1,request.id)
-            val write = request.max.asInstanceOf[APIWrite]
-            group ! Write(newTag, write.v, sign(newTag), nonce, write.key)
+          val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
+          if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
+            val tuple = (sender.path, ReadTagResult(tag, sig, nonce))
+            request.quorum += tuple
+            if (request.quorum.size==minQuorum){
+              request.rType = "WriteStep2"
+              request.max = WriteResult(nonce)
+              val max = request.quorum.map(_.asInstanceOf[ReadTagResult]).toList.sortWith(_.tag > _.tag)(0)
+              request.quorum = Set.empty[(ActorPath, Any)]
+              var newTag = Tag(max.tag.sn+1,request.id)
+              val write = request.max.asInstanceOf[APIWrite]
+              group ! Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key)
+            }
           }
         }
     }

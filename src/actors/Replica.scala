@@ -3,6 +3,7 @@ package actors
 import akka.actor.Actor
 import Datatypes._
 import scala.collection.mutable.HashMap
+import security.Encryption
 
 class Replica extends Actor{
   
@@ -19,7 +20,8 @@ class Replica extends Actor{
     }
     
     case Write(new_tag: Tag, v: Any, sig: String, nonce: Long, key: String) => {
-      //validate signature somehow...
+      val truststorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.trust-store")
+      Encryption.verifySign(truststorePath, new_tag.toString().getBytes(),sig, false)
       val tuple = map(key)
       if(tuple!=null){
         val tag = tuple._2

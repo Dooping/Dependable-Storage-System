@@ -7,6 +7,9 @@ case class Tag(sn: Int, id: String) extends Ordered[Tag]{
       case other => other
     }
   }
+  
+  override def toString: String =
+    s"($sn, $id)"
 }
 case class APIWrite(nonce: Long, key: String, clientId: String, v: Entry)
 
