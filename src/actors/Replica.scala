@@ -1,11 +1,13 @@
 package actors
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import Datatypes._
 import scala.collection.mutable.HashMap
 import security.Encryption
+import scala.util.Random
 
-class Replica extends Actor{
+class Replica(bizantyne: Boolean, chance: Int) extends Actor{
+  val r = Random
   
   val map = HashMap.empty[String,(Entry, Tag, String)].withDefaultValue(null)
   println(self.path + " created")
@@ -15,9 +17,9 @@ class Replica extends Actor{
     case ReadTag(nonce: Long, key: String) => {
       val tuple = map(key)
       if(tuple!=null)
-        sender ! ReadTagResult(tuple._2, tuple._3, nonce)
+        sendMessage(sender, ReadTagResult(tuple._2, tuple._3, nonce))
       else
-        sender ! ReadTagResult(null, null, nonce)
+        sendMessage(sender, ReadTagResult(null, null, nonce))
     }
     
     case Write(new_tag: Tag, v: Any, sig: String, nonce: Long, key: String) => {
@@ -31,16 +33,22 @@ class Replica extends Actor{
       }
       else
         map+=(key -> (v,new_tag,sig))
-      sender ! Ack(nonce)
+      sendMessage(sender, Ack(nonce))
     }
     
     case Read(nonce: Long, key: String) => {
       val tuple = map(key)
       if(tuple!=null)
-        sender ! ReadResult(tuple._2, tuple._1, tuple._3, nonce, key)
+        sendMessage(sender, ReadResult(tuple._2, tuple._1, tuple._3, nonce, key))
       else
-        sender ! ReadResult(null, null, null, nonce, key)
+        sendMessage(sender, ReadResult(null, null, null, nonce, key))
     }
+  }
+  
+  private def sendMessage(target:ActorRef, message: Any) = {
+    if(bizantyne)
+        if(r.nextInt(100)>=chance)
+          target ! message
   }
   
 }
