@@ -8,6 +8,7 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.Base64;
 
 public class Encryption {
 	
@@ -33,13 +34,13 @@ public class Encryption {
 	    if (key instanceof PrivateKey) {
 	    	signature.initSign((PrivateKey)key);
 	    	signature.update(data);
-	    	return signature.sign().toString();
+	    	return Base64.getEncoder().encodeToString(signature.sign());
 	    }
 		
 		return null;
 	}
 	
-	public static boolean verifySign(String keystorePath, byte[] data, String sig, boolean server) throws Exception{
+	public static boolean verifySign(String keystorePath, byte[] data, String sig, boolean own) throws Exception{
 		File keystore = KEYSTORE;
 		if( keystorePath != null)
 			keystore = new File(keystorePath);
@@ -49,12 +50,12 @@ public class Encryption {
 			keyStore.load(is, JKS_PASSWORD);
 		}
 		
-		Certificate certificate = (server) ? keyStore.getCertificate(ALIASPRIVATE) : keyStore.getCertificate(ALIASPUBLIC);
+		Certificate certificate = (own) ? keyStore.getCertificate(ALIASPRIVATE) : keyStore.getCertificate(ALIASPUBLIC);
 		
 		Signature signature = Signature.getInstance("SHA256withRSA");
 	    signature.initVerify(certificate);
 	    signature.update(data);
-		return signature.verify(sig.getBytes());
+		return signature.verify(Base64.getDecoder().decode(sig));
 	}
 	
 }

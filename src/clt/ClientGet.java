@@ -58,9 +58,9 @@ public class ClientGet {
 				
 				break;
 			case "2"://Test #2 [PUTSET]
-				Response key = target.path("/server/putset")
-						.request().header("key", "mykey").post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
-				System.out.println("Call: /server/putset ; Response: "+ key.getEntity());
+				Future<Response> key = target.path("/server/putset")
+						.request().header("key", "mykey").async().post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
+				System.out.println("Call: /server/putset ; Response: "+ key.get().readEntity(Long.class));
 				break;
 			case "3"://Test #3 [GETSET]
 				Response set = target.path("/server/getset").request().header("key", "mykey").get();

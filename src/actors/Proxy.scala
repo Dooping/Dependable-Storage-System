@@ -21,7 +21,7 @@ class Proxy extends Actor {
   
   def receive = {
     case Read(nonce: Long, key: String) => {
-      requests.put(nonce, new Request(sender, "ReadStep1",null))
+      requests+=(nonce -> new Request(sender, "ReadStep1",null))
       group ! Read(nonce, key)
     }
     case ReadResult(tag: Tag, v: Entry, sig: String, nonce: Long, key: String) => {
@@ -33,15 +33,18 @@ class Proxy extends Actor {
             request.quorum += tuple
             if (request.quorum.size==minQuorum){
               request.rType = "ReadStep2" 
-              val max = request.quorum.map(_.asInstanceOf[ReadResult]).toList.sortWith(_.tag > _.tag)(0)
+              val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
               request.max = max
-              request.quorum = Set.empty[(ActorPath, Any)]
+              request.quorum = Set.empty[Any]
               group ! Write(max.tag, max.v, max.sig, nonce, key)
             }
           }
+          else
+            println(self.path + ": verificação da assinatura falhou")
         }
       }
     case ReadTagResult(tag: Tag, sig: String, nonce: Long) => {
+      println(self.path + ": recebeu ReadTagResult(tag:"+tag+",sig:"+sig+",nonce:"+nonce+")")
         val request = requests(nonce)
         if(request.rType == "WriteStep1"){
           val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
@@ -50,20 +53,40 @@ class Proxy extends Actor {
             request.quorum += tuple
             if (request.quorum.size==minQuorum){
               request.rType = "WriteStep2"
-              request.max = WriteResult(nonce)
-              val max = request.quorum.map(_.asInstanceOf[ReadTagResult]).toList.sortWith(_.tag > _.tag)(0)
-              request.quorum = Set.empty[(ActorPath, Any)]
+              val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadTagResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
+              request.quorum = Set.empty[Any]
               var newTag = Tag(max.tag.sn+1,request.id)
               val write = request.max.asInstanceOf[APIWrite]
               group ! Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key)
             }
           }
+          else
+            println(self.path + ": verificacao da assinatura falhou")
+        }
+    }
+    case ReadTagResult(_, _, nonce: Long) => {
+      println(self.path + ": recebeu ReadTagResult(tag:null,sig:null,nonce:"+nonce+")")
+        val request = requests(nonce)
+        if(request.rType == "WriteStep1"){
+          val tuple = (sender.path, ReadTagResult(Tag(0,""), null, nonce))
+          request.quorum += tuple
+          if (request.quorum.size==minQuorum){
+            println("quorum")
+            request.rType = "WriteStep2"
+            val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadTagResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
+            request.quorum = Set.empty[Any]
+            var newTag = Tag(max.tag.sn+1,request.id)
+            val write = request.max.asInstanceOf[APIWrite]
+            val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
+            group ! Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key)
+          }
         }
     }
     case APIWrite(nonce: Long, key: String, id: String, v: Entry) => {
+      println(self.path + ": recebeu APIWrite nonce:"+nonce)
       val message = new Request(sender,"WriteStep1", id)
       message.max = APIWrite(nonce, key, id, v)
-      requests.put(nonce, message)
+      requests+=(nonce -> message)
       group ! ReadTag(nonce, key)
     }
     case Ack(nonce: Long) => {
@@ -71,11 +94,11 @@ class Proxy extends Actor {
       val request = requests(nonce)
       request.quorum += tuple
       if (request.quorum.size==minQuorum)
-        request.sender ! request.max
+        if(request.rType == "ReadStep2")
+          request.sender ! request.max
+        else if(request.rType == "WriteStep2")
+          request.sender ! nonce
     }
-  }
-  
-  private def sign(tag: Tag): String = {
-    return ""
+    case _ => println("recebeu mensagem diferente")
   }
 }

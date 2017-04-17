@@ -7,7 +7,7 @@ import security.Encryption
 
 class Replica extends Actor{
   
-  val map = HashMap.empty[String,(Entry, Tag, String)]
+  val map = HashMap.empty[String,(Entry, Tag, String)].withDefaultValue(null)
   println(self.path + " created")
   
   def receive = {
@@ -26,12 +26,12 @@ class Replica extends Actor{
       if(tuple!=null){
         val tag = tuple._2
         if(new_tag.sn > tag.sn){
-          map.put(key, (v,new_tag,sig))
+          map+=(key -> (v,new_tag,sig))
           sender ! Ack(nonce)
         }
       }
       else{
-        map.put(key, (v,new_tag,sig))
+        map+=(key -> (v,new_tag,sig))
         sender ! Ack(nonce)
       }
     }
