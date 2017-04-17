@@ -20,26 +20,27 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 
+
 public class SSLRestServer {
 	public static void main(String[] args) throws Exception {
 		Config defaultCfg = ConfigFactory.load();
+		int n;
 		
 		if( args.length > 0)
 			switch(args[0]){
 			case "spawner1":
 				ActorSystem spawner1 = ActorSystem.create("Spawner1",ConfigFactory.load().getConfig("Spawner1").withFallback(defaultCfg));
 				System.out.println("Spawner1 created...");
-				spawner1.actorOf(Props.create(Replica.class),"r1");
-				spawner1.actorOf(Props.create(Replica.class),"r2");
-				spawner1.actorOf(Props.create(Replica.class),"r3");
-				spawner1.actorOf(Props.create(Replica.class),"r4");
+				n = Integer.parseInt(args[1]);
+				for(int i = 1; i <= n; i++)
+					spawner1.actorOf(Props.create(Replica.class),"r"+i);
 				break;
 			case "spawner2":
 				ActorSystem spawner2 = ActorSystem.create("Spawner2",ConfigFactory.load().getConfig("Spawner2").withFallback(defaultCfg));
 				System.out.println("Spawner2 created...");
-				spawner2.actorOf(Props.create(Replica.class),"r5");
-				spawner2.actorOf(Props.create(Replica.class),"r6");
-				spawner2.actorOf(Props.create(Replica.class),"r7");
+				n = Integer.parseInt(args[1]);
+				for(int i = 1; i <= n; i++)
+					spawner2.actorOf(Props.create(Replica.class),"r"+i);
 				break;
 			case "proxy":
 				URI baseUri = UriBuilder.fromUri("http://0.0.0.0/").port(9090).build();

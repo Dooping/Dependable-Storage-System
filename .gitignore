@@ -4,3 +4,4 @@ target/
 .project
 src/.DS_Store
 .classpath
+results.csv

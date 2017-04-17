@@ -37,6 +37,7 @@ class Proxy extends Actor {
               request.rType = "ReadStep2" 
               val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
               request.max = max
+              println("nonce rr "+nonce)
               request.quorum = Set.empty[Any]
               router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
             }
@@ -45,9 +46,24 @@ class Proxy extends Actor {
             println(self.path + ": verificação da assinatura falhou")
         }
       }
+    case ReadResult(_, _, _, nonce: Long, key: String) => {
+        val request = requests(nonce)
+        if(request.rType == "ReadStep1"){
+            val tuple = (sender.path, ReadResult(Tag(0,""), null, null, nonce, key))
+            request.quorum += tuple
+            if (request.quorum.size==minQuorum){
+              request.rType = "ReadStep2" 
+              val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
+              request.max = max
+              request.quorum = Set.empty[Any]
+              if(max.tag.sn > 0)
+                router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
+              else
+                request.sender ! max
+            }
+        }
+      }
     case ReadTagResult(tag: Tag, sig: String, nonce: Long) => {
-      println(sender.path)
-      println(self.path + ": recebeu ReadTagResult(tag:"+tag+",sig:"+sig+",nonce:"+nonce+")")
         val request = requests(nonce)
         if(request.rType == "WriteStep1"){
           if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
@@ -67,7 +83,6 @@ class Proxy extends Actor {
         }
     }
     case ReadTagResult(_, _, nonce: Long) => {
-      println(self.path + ": recebeu ReadTagResult(tag:null,sig:null,nonce:"+nonce+")")
         val request = requests(nonce)
         if(request.rType == "WriteStep1"){
           val tuple = (sender.path, ReadTagResult(Tag(0,""), null, nonce))
@@ -84,19 +99,21 @@ class Proxy extends Actor {
         }
     }
     case APIWrite(nonce: Long, key: String, id: String, v: Entry) => {
-      println(self.path + ": recebeu APIWrite nonce:"+nonce)
       val message = new Request(sender,"WriteStep1", id)
       message.max = APIWrite(nonce, key, id, v)
       requests+=(nonce -> message)
       router1 ! Broadcast(ReadTag(nonce, key))
     }
     case Ack(nonce: Long) => {
+      println("ack "+nonce)
       val tuple = (sender.path, Ack(nonce))
       val request = requests(nonce)
       request.quorum += tuple
       if (request.quorum.size==minQuorum)
-        if(request.rType == "ReadStep2")
+        if(request.rType == "ReadStep2"){
+          println("nonce ack "+nonce + " type:"+request.rType)
           request.sender ! request.max
+        }
         else if(request.rType == "WriteStep2")
           request.sender ! nonce
     }

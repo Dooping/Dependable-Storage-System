@@ -67,8 +67,8 @@ public class ClientGet {
 				System.out.println("Call: /server/putset ; Response: "+ key.get().readEntity(Long.class));
 				break;
 			case "3"://Test #3 [GETSET]
-				Response set = target.path("/server/getset").request().header("key", "mykey").get();
-				System.out.println("Call: /server/getset ; Response: "+ set.getEntity());
+				Future<Response> set = target.path("/server/getset").request().header("key", "mykey").async().get();
+				System.out.println("Call: /server/getset ; Response: "+ set.get().readEntity(Entry.class));
 				break;
 			case "4"://Test #4 [READELEM]
 				Response elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").get();

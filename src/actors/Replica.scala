@@ -25,15 +25,13 @@ class Replica extends Actor{
       val tuple = map(key)
       if(tuple!=null){
         val tag = tuple._2
-        if(new_tag.sn > tag.sn){
+        if(new_tag.sn > tag.sn)
           map+=(key -> (v,new_tag,sig))
-          sender ! Ack(nonce)
-        }
+        
       }
-      else{
+      else
         map+=(key -> (v,new_tag,sig))
-        sender ! Ack(nonce)
-      }
+      sender ! Ack(nonce)
     }
     
     case Read(nonce: Long, key: String) => {

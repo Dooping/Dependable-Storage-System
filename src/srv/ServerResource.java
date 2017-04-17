@@ -66,7 +66,7 @@ public class ServerResource {
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
 		System.out.println(proxy.pathString());
-		APIWrite write = new APIWrite(1234, "mykey","clientidip",dummyEntry);
+		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",dummyEntry);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -92,12 +92,12 @@ public class ServerResource {
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		Read read = new Read(1234,"mykey");
+		Read read = new Read(System.nanoTime(),"mykey");
 		Future<Object> future = Patterns.ask(proxy, read, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
-            	//long res = (long)result;
+            	ReadResult res = (ReadResult)result;
             	System.out.println(result);
             	if(failure != null){
             		if(failure.getMessage() != null)
@@ -105,7 +105,7 @@ public class ServerResource {
             		else
             			asyncResponse.resume(Response.serverError());
             	}else
-            		asyncResponse.resume(Response.ok().entity(result).build());
+            		asyncResponse.resume(Response.ok().entity(res.v()).build());
             }
         }, actorSystem.dispatcher());
 		
