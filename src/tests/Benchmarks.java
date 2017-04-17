@@ -35,6 +35,8 @@ public class Benchmarks {
 		sb.append("status");
 		sb.append(",");
 		sb.append("time");
+		sb.append(',');
+		sb.append("type");
 		sb.append('\n');
 		
 		fw.write(sb.toString());
@@ -58,7 +60,7 @@ public class Benchmarks {
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey").async().
-					post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
+					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
 			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -111,18 +113,15 @@ public class Benchmarks {
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey").async().
-					post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
+					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
 			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        String msstring = "".format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("3","PUT",status,msstring);
-		}
-		
-		//50 GETSET
-		for(int i = 0 ; i < 100 ; i ++){
-			nanotimeStart = System.nanoTime();
+	        
+	        nanotimeStart = System.nanoTime();
 			value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
@@ -131,11 +130,11 @@ public class Benchmarks {
 			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
-	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        String msstring = "".format("%.7f",ms).replace(',','.');
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = "".format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("3","GET",status,msstring);
 		}
-
+		
 		fw.write(sb.toString());
 		fw.close();
 		
