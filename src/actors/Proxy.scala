@@ -1,6 +1,6 @@
 package actors
 
-import akka.actor.{Actor, ActorRef, Props, ActorPath}
+import akka.actor.{Actor, ActorRef, Props, ActorPath, PoisonPill}
 import Datatypes._
 import Datatypes.Request
 import messages._
@@ -9,10 +9,12 @@ import akka.actor.ActorSelection.toScala
 import scala.collection.mutable.{Set, HashMap}
 import security.Encryption
 import akka.routing.Broadcast
+import scala.util.Random
 
-class Proxy extends Actor {
+class Proxy(replicasToCrash: Int, chance: Int, minQuorum: Int = 5) extends Actor {
   
-  val minQuorum = 5
+  val r = Random
+  var replicasCrashed = 0;
   
   val requests = HashMap.empty[Long, Request]
   
@@ -24,6 +26,12 @@ class Proxy extends Actor {
   
   def receive = {
     case Read(nonce: Long, key: String) => {
+      if (replicasCrashed<replicasToCrash)
+        if(r.nextInt(100)<chance){
+          router1 ! PoisonPill
+          replicasCrashed+=1
+        }
+          
       requests+=(nonce -> new Request(sender, "ReadStep1",null))
       router1 ! Broadcast(Read(nonce, key))
     }
@@ -99,6 +107,11 @@ class Proxy extends Actor {
         }
     }
     case APIWrite(nonce: Long, key: String, id: String, v: Entry) => {
+      if (replicasCrashed<replicasToCrash)
+        if(r.nextInt(100)<chance){
+          router1 ! PoisonPill
+          replicasCrashed+=1
+        }
       val message = new Request(sender,"WriteStep1", id)
       message.max = APIWrite(nonce, key, id, v)
       requests+=(nonce -> message)
