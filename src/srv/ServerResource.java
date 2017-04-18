@@ -65,7 +65,7 @@ public class ServerResource {
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
 		//System.out.println(proxy.pathString());
-		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",dummyEntry);
+		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",entry);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
