@@ -65,7 +65,7 @@ public class Benchmarks {
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        String msstring = "".format("%.7f",ms).replace(',','.');
+	        String msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("1","PUT",status,msstring);
 		}
 		
@@ -91,7 +91,7 @@ public class Benchmarks {
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        String msstring = "".format("%.7f",ms).replace(',','.');
+	        String msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("2","GET",status,msstring);
 		}
 		
@@ -120,7 +120,7 @@ public class Benchmarks {
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        String msstring = "".format("%.7f",ms).replace(',','.');
+	        String msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("3","PUT",status,msstring);
 	        
 	        //GETSET
@@ -134,7 +134,7 @@ public class Benchmarks {
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = "".format("%.7f",ms).replace(',','.');
+	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("3","GET",status,msstring);
 		}
 		
@@ -162,7 +162,7 @@ public class Benchmarks {
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        String msstring = "".format("%.7f",ms).replace(',','.');
+	        String msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("4","ADD",status,msstring);
 	        
 	        //READELEM
@@ -176,7 +176,7 @@ public class Benchmarks {
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = "".format("%.7f",ms).replace(',','.');
+	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("4","READ",status,msstring);
 		}
 		
