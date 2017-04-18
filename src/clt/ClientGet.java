@@ -76,6 +76,8 @@ public class ClientGet {
 			case "4"://test #4 [ADDELEM]
 				break;
 			case "5"://test #5 [REMOVESET]
+				Future<Response> resu = target.path("/server/removeset").request().header("key", "mykey").async().delete();
+				System.out.println("Call: /server/remove ; Response: "+ resu.toString());
 				break;
 			case "6"://test #6 [WRITEELEM]
 				JSONObject jsonobj = new JSONObject();
