@@ -60,26 +60,28 @@ public class ServerResource {
 	@ManagedAsync
 	public void putset(@HeaderParam("key") String key, Entry entry, @Suspended final AsyncResponse asyncResponse){
 		System.out.println("[PUTSET] " + entry.toString());
-		System.out.println(entry.toString());
+		//System.out.println(entry.toString());
 		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		System.out.println(proxy.pathString());
+		//System.out.println(proxy.pathString());
 		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",dummyEntry);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
-            	long res = (long)result;
+            	
             	System.out.println(result);
             	if(failure != null){
             		if(failure.getMessage() != null)
             			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
             		else
             			asyncResponse.resume(Response.serverError());
-            	}else
+            	}else{
+            		long res = (long)result;
             		asyncResponse.resume(Response.ok().entity(res).build());
+            	}
             }
         }, actorSystem.dispatcher());
 	}
@@ -97,15 +99,16 @@ public class ServerResource {
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
-            	ReadResult res = (ReadResult)result;
             	System.out.println(result);
             	if(failure != null){
             		if(failure.getMessage() != null)
             			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
             		else
             			asyncResponse.resume(Response.serverError());
-            	}else
+            	}else{
+                	ReadResult res = (ReadResult)result;
             		asyncResponse.resume(Response.ok().entity(res.v()).build());
+            	}
             }
         }, actorSystem.dispatcher());
 		

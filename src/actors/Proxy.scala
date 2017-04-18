@@ -1,6 +1,6 @@
 package actors
 
-import akka.actor.{Actor, ActorRef, Props, ActorPath, PoisonPill}
+import akka.actor.{Actor, ActorRef, Props, ActorPath}
 import Datatypes._
 import Datatypes.Request
 import messages._
@@ -11,7 +11,7 @@ import security.Encryption
 import akka.routing.Broadcast
 import scala.util.Random
 
-class Proxy(replicasToCrash: Int, chance: Int, minQuorum: Int = 5) extends Actor {
+class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum: Int) extends Actor {
   
   val r = Random
   var replicasCrashed = 0;
@@ -22,13 +22,19 @@ class Proxy(replicasToCrash: Int, chance: Int, minQuorum: Int = 5) extends Actor
   
   val router1: ActorRef = context.actorOf(FromConfig.props(Props[Replica]), "router1")
   
+  var i = 0
+  while (i < byzantineReplicas){
+    i+=1
+    router1 ! SetByzantine(chance)
+  }
+  
   val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
   
   def receive = {
     case Read(nonce: Long, key: String) => {
       if (replicasCrashed<replicasToCrash)
         if(r.nextInt(100)<chance){
-          router1 ! PoisonPill
+          router1 ! CrashReplica
           replicasCrashed+=1
         }
           
@@ -45,7 +51,6 @@ class Proxy(replicasToCrash: Int, chance: Int, minQuorum: Int = 5) extends Actor
               request.rType = "ReadStep2" 
               val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
               request.max = max
-              println("nonce rr "+nonce)
               request.quorum = Set.empty[Any]
               router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
             }
@@ -96,7 +101,6 @@ class Proxy(replicasToCrash: Int, chance: Int, minQuorum: Int = 5) extends Actor
           val tuple = (sender.path, ReadTagResult(Tag(0,""), null, nonce))
           request.quorum += tuple
           if (request.quorum.size==minQuorum){
-            println("quorum")
             request.rType = "WriteStep2"
             val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadTagResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
             request.quorum = Set.empty[Any]
@@ -109,7 +113,7 @@ class Proxy(replicasToCrash: Int, chance: Int, minQuorum: Int = 5) extends Actor
     case APIWrite(nonce: Long, key: String, id: String, v: Entry) => {
       if (replicasCrashed<replicasToCrash)
         if(r.nextInt(100)<chance){
-          router1 ! PoisonPill
+          router1 ! CrashReplica
           replicasCrashed+=1
         }
       val message = new Request(sender,"WriteStep1", id)
@@ -118,15 +122,12 @@ class Proxy(replicasToCrash: Int, chance: Int, minQuorum: Int = 5) extends Actor
       router1 ! Broadcast(ReadTag(nonce, key))
     }
     case Ack(nonce: Long) => {
-      println("ack "+nonce)
       val tuple = (sender.path, Ack(nonce))
       val request = requests(nonce)
       request.quorum += tuple
       if (request.quorum.size==minQuorum)
-        if(request.rType == "ReadStep2"){
-          println("nonce ack "+nonce + " type:"+request.rType)
+        if(request.rType == "ReadStep2")
           request.sender ! request.max
-        }
         else if(request.rType == "WriteStep2")
           request.sender ! nonce
     }

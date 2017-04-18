@@ -25,11 +25,16 @@ public class SSLRestServer {
 	public static void main(String[] args) throws Exception {
 		Config defaultCfg = ConfigFactory.load();
 		int n;
-		int special = 0;
+		int crash = 0;
 		int chance = 0;
-		if( args.length > 3){
-			special = Integer.parseInt(args[2]);
+		int quorum = 5;
+		int byzantine = 0;
+		if( args.length > 4){
+			crash = Integer.parseInt(args[2]);
 			chance = Integer.parseInt(args[3]);
+			byzantine = Integer.parseInt(args[4]);
+			if( args.length > 5)
+				quorum = Integer.parseInt(args[5]);
 		}
 		
 		if( args.length > 0)
@@ -39,26 +44,20 @@ public class SSLRestServer {
 				System.out.println("Spawner1 created...");
 				n = Integer.parseInt(args[1]);
 				for(int i = 1; i <= n; i++)
-					if(i<special)
-						spawner1.actorOf(Props.create(Replica.class,true,chance),"r"+i);
-					else
-						spawner1.actorOf(Props.create(Replica.class,false,0),"r"+i);
+					spawner1.actorOf(Props.create(Replica.class),"r"+i);
 				break;
 			case "spawner2":
 				ActorSystem spawner2 = ActorSystem.create("Spawner2",ConfigFactory.load().getConfig("Spawner2").withFallback(defaultCfg));
 				System.out.println("Spawner2 created...");
 				n = Integer.parseInt(args[1]);
 				for(int i = 1; i <= n; i++)
-					if(i<special)
-						spawner2.actorOf(Props.create(Replica.class,true,chance),"r"+i);
-					else
-						spawner2.actorOf(Props.create(Replica.class,false,0),"r"+i);
+					spawner2.actorOf(Props.create(Replica.class),"r"+i);
 				break;
 			case "proxy":
 				URI baseUri = UriBuilder.fromUri("http://0.0.0.0/").port(9090).build();
 				ResourceConfig config = new ResourceConfig();
 				ActorSystem system = ActorSystem.create("Proxy",ConfigFactory.load().getConfig("Proxy").withFallback(defaultCfg));
-				system.actorOf(Props.create(Proxy.class,special,chance),"proxy");
+				system.actorOf(Props.create(Proxy.class, crash, byzantine, chance, quorum),"proxy");
 				config.register(new AbstractBinder() {
 		            protected void configure() {
 		                bind(system).to(ActorSystem.class);

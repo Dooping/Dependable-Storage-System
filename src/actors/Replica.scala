@@ -6,7 +6,9 @@ import scala.collection.mutable.HashMap
 import security.Encryption
 import scala.util.Random
 
-class Replica(bizantyne: Boolean, chance: Int) extends Actor{
+class Replica extends Actor{
+  var byzantine = false
+  var chance = 0
   val r = Random
   
   val map = HashMap.empty[String,(Entry, Tag, String)].withDefaultValue(null)
@@ -43,12 +45,23 @@ class Replica(bizantyne: Boolean, chance: Int) extends Actor{
       else
         sendMessage(sender, ReadResult(null, null, null, nonce, key))
     }
+    case CrashReplica => {
+      println(self.path + " crashed!")
+      context.stop(self)
+    }
+    case SetByzantine(chance: Int) => {
+      byzantine = true;
+      this.chance = chance 
+    }
   }
   
   private def sendMessage(target:ActorRef, message: Any) = {
-    if(bizantyne)
+    if(byzantine){
         if(r.nextInt(100)>=chance)
           target ! message
+    }
+    else
+      target ! message
   }
   
 }

@@ -20,3 +20,6 @@ case class ReadResult(tag: Tag, v: Entry, sig: String, nonce: Long, key: String)
 case class ReadTagResult(tag: Tag, sig: String, nonce: Long)
 case class WriteResult(nonce: Long)
 case class Ack(nonce: Long)
+
+case class CrashReplica()
+case class SetByzantine(chance: Int)
