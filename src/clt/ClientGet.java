@@ -79,6 +79,8 @@ public class ClientGet {
 				System.out.println("Call: /server/addelem ; Response: "+addelem.get().readEntity(Long.class));
 				break;
 			case "5"://test #5 [REMOVESET]
+				Future<Response> delete = target.path("/server/removeset").request().header("key", "mykey").async().delete();
+				System.out.println("Call: /server/removeset ; Response: "+delete.get().readEntity(Long.class));
 				break;
 			case "6"://test #6 [WRITEELEM]
 				JSONObject jsonobj = new JSONObject();

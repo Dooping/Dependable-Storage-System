@@ -159,9 +159,28 @@ public class ServerResource {
 	
 	@DELETE
 	@Path("/removeset")
-	public Response removeSet(@HeaderParam("key") String key){
+	public void removeSet(@HeaderParam("key") String key,@Suspended final AsyncResponse asyncResponse){
 		System.out.println("[REMOVESET]");
-		return Response.ok().build();
+		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+		
+		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",null);
+		Future<Object> future = Patterns.ask(proxy, write, timeout);
+		future.onComplete(new OnComplete<Object>() {
+
+            public void onComplete(Throwable failure, Object result) {
+            	
+            	if(failure != null){
+            		if(failure.getMessage() != null)
+            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+            		else
+            			asyncResponse.resume(Response.serverError());
+            	}else{
+            		long res = (long)result;
+            		asyncResponse.resume(Response.ok().entity(res).build());
+            	}
+            }
+        }, actorSystem.dispatcher());
 	}
 	
 	@POST

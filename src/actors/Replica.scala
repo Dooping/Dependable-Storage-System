@@ -38,6 +38,20 @@ class Replica extends Actor{
       sendMessage(sender, Ack(nonce))
     }
     
+    case Write(new_tag: Tag, _, sig: String, nonce: Long, key: String) => {
+      Encryption.verifySign(truststorePath, new_tag.toString().getBytes(),sig, false)
+      val tuple = map(key)
+      if(tuple!=null){
+        val tag = tuple._2
+        if(new_tag.sn > tag.sn)
+          map+=(key -> null)
+        
+      }
+      else
+        map+=(key -> null)
+      sendMessage(sender, Ack(nonce))
+    }
+    
     case Read(nonce: Long, key: String) => {
       val tuple = map(key)
       if(tuple!=null)
@@ -54,6 +68,7 @@ class Replica extends Actor{
       byzantine = true;
       this.chance = chance 
     }
+    case _ => println("replica recebeu mensagem diferente")
   }
   
   private def sendMessage(target:ActorRef, message: Any) = {
