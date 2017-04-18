@@ -116,10 +116,29 @@ public class ServerResource {
 	
 	@POST
 	@Path("/addelem")
-	public Response addElem(@HeaderParam("key") String key){
+	public void addElem(@HeaderParam("key") String key,@Suspended final AsyncResponse asyncResponse){
 		System.out.println("[ADDELEM]");
-		//Add random element to end of list?
-		return Response.ok().build();
+		
+		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+		
+		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",new Entry(1,"two",3,"four",5,"six"));
+		Future<Object> future = Patterns.ask(proxy, write, timeout);
+		future.onComplete(new OnComplete<Object>() {
+
+            public void onComplete(Throwable failure, Object result) {
+            	
+            	if(failure != null){
+            		if(failure.getMessage() != null)
+            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+            		else
+            			asyncResponse.resume(Response.serverError());
+            	}else{
+            		long res = (long)result;
+            		asyncResponse.resume(Response.ok().entity(res).build());
+            	}
+            }
+        }, actorSystem.dispatcher());
 	}
 	
 	@DELETE
@@ -143,9 +162,29 @@ public class ServerResource {
 	@GET
 	@Path("/readelem")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response readElem(@HeaderParam("key") String key,@HeaderParam("pos") int pos){
-		System.out.println("[READELEM] Position:"+ pos + " Value:"+dummyEntry.getElem(pos));
-		return Response.ok(dummyEntry.getElem(pos), MediaType.APPLICATION_JSON).build();
+	public void readElem(@HeaderParam("key") String key,@HeaderParam("pos") int pos,@Suspended final AsyncResponse asyncResponse){
+		System.out.println("[READELEM]");
+		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+		
+		Read read = new Read(System.nanoTime(),"mykey");
+		Future<Object> future = Patterns.ask(proxy, read, timeout);
+		future.onComplete(new OnComplete<Object>() {
+
+            public void onComplete(Throwable failure, Object result) {
+            	
+            	if(failure != null){
+            		if(failure.getMessage() != null)
+            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+            		else
+            			asyncResponse.resume(Response.serverError());
+            	}else{
+            		ReadResult res = (ReadResult)result;
+            		System.out.println("READELEM:"+ result);
+            		asyncResponse.resume(Response.ok().entity(res.v().getElem(pos)).build());
+            	}
+            }
+        }, actorSystem.dispatcher());
 	}
 	
 	@POST

@@ -100,7 +100,7 @@ public class Benchmarks {
 		
 	}
 	
-	//50 PUTSET 50 GETSET
+	//50 PUTSET & 50 GESET ALTER
 	public void benchmark3() throws Exception{
 		fw = new FileWriter(resFile,true); //the true is to append to the end of file
 		sb = new StringBuilder();//clears the previous stringbuilder
@@ -108,8 +108,10 @@ public class Benchmarks {
 		long nanotimeStart,nanotimeEnd ;
 		int status;
 		
-		//50 PUTSET
+		//50 PUTSET & 50 GESET ALTER
 		for(int i = 0 ; i < 50 ; i ++){
+			
+			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey").async().
@@ -121,6 +123,7 @@ public class Benchmarks {
 	        String msstring = "".format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("3","PUT",status,msstring);
 	        
+	        //GETSET
 	        nanotimeStart = System.nanoTime();
 			value = target.path("/server/getset")
 					.request()
@@ -140,7 +143,46 @@ public class Benchmarks {
 		
 	}
 	
-	public void benchmark4(){
+	//50 ADDELEM & 50 READELEM ALTER
+	public void benchmark4() throws Exception{
+		fw = new FileWriter(resFile,true); //the true is to append to the end of file
+		sb = new StringBuilder();//clears the previous stringbuilder
+		Future<Response> value;
+		long nanotimeStart,nanotimeEnd ;
+		int status;
+		
+		//50 ADDELEM & 50 READELEM ALTER
+		for(int i = 0 ; i < 50 ; i ++){
+			
+			//ADDELEM
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/addelem")
+					.request().header("key", "mykey").async().post(null);
+			
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        String msstring = "".format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("4","ADD",status,msstring);
+	        
+	        //READELEM
+	        nanotimeStart = System.nanoTime();
+			value = target.path("/server/readelem")
+					.request().header("key", "mykey").header("pos", 1)
+					.accept(MediaType.APPLICATION_JSON)
+					.async()
+					.get();
+			
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = "".format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("4","READ",status,msstring);
+		}
+		
+		fw.write(sb.toString());
+		fw.close();
+		
 		
 	}
 	
