@@ -28,7 +28,6 @@ import org.glassfish.jersey.server.ManagedAsync;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
-import messages.*;
 
 import org.json.*;
 
@@ -121,8 +120,8 @@ public class ServerResource {
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",new Entry(1,"two",3,"four",5,"six"));
-		Future<Object> future = Patterns.ask(proxy, write, timeout);
+		Read read = new Read(System.nanoTime(),key);
+		Future<Object> future = Patterns.ask(proxy, read, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
@@ -133,8 +132,26 @@ public class ServerResource {
             		else
             			asyncResponse.resume(Response.serverError());
             	}else{
-            		long res = (long)result;
-            		asyncResponse.resume(Response.ok().entity(res).build());
+            		ReadResult res = (ReadResult)result;
+            		Entry entry = res.v();
+            		entry.addElem();
+            		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",entry);
+            		Future<Object> future = Patterns.ask(proxy, write, timeout);
+            		future.onComplete(new OnComplete<Object>() {
+
+                        public void onComplete(Throwable failure, Object result) {
+                        	if(failure != null){
+                        		if(failure.getMessage() != null)
+                        			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+                        		else
+                        			asyncResponse.resume(Response.serverError());
+                        	}else{
+                        		long res = (long)result;
+                        		asyncResponse.resume(Response.ok().entity(res).build());
+                        	}
+                        }
+                    }, actorSystem.dispatcher());
+            		
             	}
             }
         }, actorSystem.dispatcher());

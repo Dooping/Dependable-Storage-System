@@ -74,6 +74,9 @@ public class ClientGet {
 				System.out.println("Call: /server/getset ; Response: "+ set.get().readEntity(Entry.class));
 				break;
 			case "4"://test #4 [ADDELEM]
+				Future<Response> addelem = target.path("/server/addelem").request()
+					.header("key", "mykey").async().post(Entity.entity("", MediaType.APPLICATION_JSON));
+				System.out.println("Call: /server/addelem ; Response: "+addelem.get().readEntity(Long.class));
 				break;
 			case "5"://test #5 [REMOVESET]
 				Future<Response> resu = target.path("/server/removeset").request().header("key", "mykey").async().delete();

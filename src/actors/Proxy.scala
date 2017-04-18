@@ -3,7 +3,6 @@ package actors
 import akka.actor.{Actor, ActorRef, Props, ActorPath}
 import Datatypes._
 import Datatypes.Request
-import messages._
 import akka.routing.FromConfig
 import akka.actor.ActorSelection.toScala
 import scala.collection.mutable.{Set, HashMap}
@@ -118,6 +117,17 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
         }
       val message = new Request(sender,"WriteStep1", id)
       message.max = APIWrite(nonce, key, id, v)
+      requests+=(nonce -> message)
+      router1 ! Broadcast(ReadTag(nonce, key))
+    }
+    case APIWrite(nonce: Long, key: String, id: String, _) => {
+      if (replicasCrashed<replicasToCrash)
+        if(r.nextInt(100)<chance){
+          router1 ! CrashReplica
+          replicasCrashed+=1
+        }
+      val message = new Request(sender,"WriteStep1", id)
+      message.max = APIWrite(nonce, key, id, null)
       requests+=(nonce -> message)
       router1 ! Broadcast(ReadTag(nonce, key))
     }
