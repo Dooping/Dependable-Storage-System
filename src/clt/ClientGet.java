@@ -85,12 +85,15 @@ public class ClientGet {
 				System.out.println(val.toString());
 				break;
 			case "7"://Test #7 [READELEM]
-				Response elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").get();
-				System.out.println("Call: /server/readelem ; Response: " + elem.getEntity());
+				Future<Response> elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").async().get();
+				System.out.println("Call: /server/readelem ; Response: " + elem.get().readEntity(String.class));
 				break;
 			case "8"://Test #8 [ISELEM]
-				Response iselem = target.path("/server/iselem").queryParam("elem", "two").request().header("key","mykey").get();
-				System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());
+				JSONObject json = new JSONObject();
+				json.append("element", "two");
+				Future<Response> iselem = target.path("/server/iselem").request()
+						.header("key","mykey").async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
+				System.out.println("Call: /server/iselem ; Response: " + iselem.get().readEntity(String.class));
 				break;
 			case "9"://Test #9 [BENCHMARK1]
 				test.benchmark1();

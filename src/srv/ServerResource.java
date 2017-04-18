@@ -65,7 +65,7 @@ public class ServerResource {
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
 		System.out.println(proxy.pathString());
-		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",dummyEntry);
+		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",dummyEntry);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -92,7 +92,7 @@ public class ServerResource {
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		Read read = new Read(System.nanoTime(),"mykey");
+		Read read = new Read(System.nanoTime(),key);
 		Future<Object> future = Patterns.ask(proxy, read, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -121,7 +121,7 @@ public class ServerResource {
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",new Entry(1,"two",3,"four",5,"six"));
+		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",new Entry(1,"two",3,"four",5,"six"));
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -155,11 +155,14 @@ public class ServerResource {
 		JSONObject o = new JSONObject(json);
 		JSONArray jdata = o.getJSONArray("element");
 		Object obj = jdata.get(0);
+<<<<<<< HEAD
 		
+=======
+>>>>>>> 3ec1fe9ab1b9c983419145abe9882341c2ad2943
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		Read read = new Read(System.nanoTime(),"mykey");
+		Read read = new Read(System.nanoTime(),key);
 		Future<Object> future = Patterns.ask(proxy, read, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -175,8 +178,14 @@ public class ServerResource {
             		Entry entry = res.v();
             		entry.values.remove(pos);
             		entry.values.add(pos,obj);
+<<<<<<< HEAD
             		
             		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",entry);
+=======
+            		System.out.println(entry.toString());
+            		System.out.println("SENDING API WRITE");
+            		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",entry);
+>>>>>>> 3ec1fe9ab1b9c983419145abe9882341c2ad2943
             		Future<Object> future = Patterns.ask(proxy, write, timeout);
             		future.onComplete(new OnComplete<Object>() {
 
@@ -207,7 +216,7 @@ public class ServerResource {
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		Read read = new Read(System.nanoTime(),"mykey");
+		Read read = new Read(System.nanoTime(),key);
 		Future<Object> future = Patterns.ask(proxy, read, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -221,7 +230,10 @@ public class ServerResource {
             	}else{
             		ReadResult res = (ReadResult)result;
             		System.out.println("READELEM:"+ result);
-            		asyncResponse.resume(Response.ok().entity(res.v().getElem(pos)).build());
+            		if(res.v()!=null)
+            			asyncResponse.resume(Response.ok().entity(res.v().getElem(pos)).build());
+            		else
+            			asyncResponse.resume(Response.ok().entity(null).build());
             	}
             }
         }, actorSystem.dispatcher());
@@ -230,14 +242,37 @@ public class ServerResource {
 	@POST
 	@Path("/iselem")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response isElem(@HeaderParam("key")String key, String json){
+	public void isElem(@HeaderParam("key")String key, String json, @Suspended final AsyncResponse asyncResponse){
 		//In order to check if this element exists in list of values, how do we
 		//know if we should compare it with string or int when we have a list of Objects?
 		JSONObject o = new JSONObject(json);
-		Object obj = o.get("element");
-		System.out.println(obj);
-		System.out.println("[ISELEM] Element:"+ json + " Value: (need to check if elem exists)");
-		return Response.ok().build();
+		JSONArray jdata = o.getJSONArray("element");
+		Object obj = jdata.get(0);
+		System.out.println("[ISELEM] Element:"+ obj + " Value: (need to check if elem exists)");
+		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+		
+		Read read = new Read(System.nanoTime(),key);
+		Future<Object> future = Patterns.ask(proxy, read, timeout);
+		future.onComplete(new OnComplete<Object>() {
+
+            public void onComplete(Throwable failure, Object result) {
+            	
+            	if(failure != null){
+            		if(failure.getMessage() != null)
+            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+            		else
+            			asyncResponse.resume(Response.serverError());
+            	}else{
+            		ReadResult res = (ReadResult)result;
+                	System.out.println(result);
+                	if(res.v()!=null)
+                		asyncResponse.resume(Response.ok().entity(res.v().values.contains(obj)).build());
+                	else
+                		asyncResponse.resume(Response.ok().entity(false).build());
+            	}
+            }
+        }, actorSystem.dispatcher());
 	}
 
 }
