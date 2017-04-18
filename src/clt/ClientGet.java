@@ -25,14 +25,41 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import javax.ws.rs.client.InvocationCallback;
 
 public class ClientGet {
 
 	public static void main(String[] args) throws Exception {
-		String hostname = "localhost:9090";
-		if( args.length > 0)
-			hostname = args[0];
+		Options options = new Options();
+		
+		Option hostnameOp = new Option("h", "hostname", true, "hostname adress");
+		hostnameOp.setRequired(false);
+        options.addOption(hostnameOp);
+        
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine cmd;
+        
+        try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            formatter.printHelp("ClientGet", options);
+
+            System.exit(1);
+            return;
+        }
+		
+		String hostname = cmd.getOptionValue("hostname", "localhost:9090");
 
 		Client client = ClientBuilder.newBuilder()
 				.hostnameVerifier(new InsecureHostnameVerifier())
