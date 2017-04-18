@@ -59,17 +59,18 @@ public class ServerResource {
 	@ManagedAsync
 	public void putset(@HeaderParam("key") String key, Entry entry, @Suspended final AsyncResponse asyncResponse){
 		System.out.println("[PUTSET] " + entry.toString());
-		//System.out.println(entry.toString());
+		System.out.println(entry.toString());
 		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		//System.out.println(proxy.pathString());
-		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",entry);
+		System.out.println(proxy.pathString());
+		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",dummyEntry);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
+            	
             	if(failure != null){
             		if(failure.getMessage() != null)
             			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
@@ -96,6 +97,7 @@ public class ServerResource {
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
+            	
             	if(failure != null){
             		if(failure.getMessage() != null)
             			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
@@ -103,7 +105,7 @@ public class ServerResource {
             			asyncResponse.resume(Response.serverError());
             	}else{
             		ReadResult res = (ReadResult)result;
-                	//System.out.println(result);
+                	System.out.println(result);
             		asyncResponse.resume(Response.ok().entity(res.v()).build());
             	}
             }
@@ -148,12 +150,57 @@ public class ServerResource {
 	@POST
 	@Path("/writeelem")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response writeElem(@HeaderParam("key") String key, String json,@HeaderParam("pos") int pos){
-		System.out.println("writeElem called");
+	public void writeElem(@HeaderParam("key") String key, String json,@HeaderParam("pos") int pos,@Suspended final AsyncResponse asyncResponse){
+		System.out.println("[WRITEELEM]");
 		JSONObject o = new JSONObject(json);
-		Object obj = o.get("element");
-		System.out.println(obj);
-		return Response.ok().build();
+		JSONArray jdata = o.getJSONArray("element");
+		Object obj = jdata.get(0);
+		System.out.println("JAAAYSOON");
+		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+		
+		Read read = new Read(System.nanoTime(),"mykey");
+		Future<Object> future = Patterns.ask(proxy, read, timeout);
+		future.onComplete(new OnComplete<Object>() {
+
+            public void onComplete(Throwable failure, Object result) {
+            	
+            	if(failure != null){
+            		if(failure.getMessage() != null)
+            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+            		else
+            			asyncResponse.resume(Response.serverError());
+            	}else{
+            		ReadResult res = (ReadResult)result;
+            		Entry entry = res.v();
+            		//asyncResponse.resume(Response.ok().entity(res.v()).build());
+            		entry.values.remove(pos);
+            		entry.values.add(pos,obj);
+            		System.out.println(entry.toString());
+            		System.out.println("SENDING API WRITE");
+            		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",entry);
+            		Future<Object> future = Patterns.ask(proxy, write, timeout);
+            		future.onComplete(new OnComplete<Object>() {
+
+                        public void onComplete(Throwable failure, Object result) {
+                        	System.out.println("COMPLETE");
+                        	if(failure != null){
+                        		if(failure.getMessage() != null)
+                        			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+                        		else
+                        			asyncResponse.resume(Response.serverError());
+                        	}else{
+                        		//long res = (long)result;
+                        		System.out.println("WRITEELEM " + result.toString());
+                        		asyncResponse.resume(Response.ok().entity(res).build());
+                        	}
+                        }
+                    }, actorSystem.dispatcher());
+            		
+            	}
+            }
+        }, actorSystem.dispatcher());
+		
 	}
 	
 	@GET

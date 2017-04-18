@@ -26,40 +26,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.json.JSONObject;
 
 import javax.ws.rs.client.InvocationCallback;
 
 public class ClientGet {
 
 	public static void main(String[] args) throws Exception {
-		Options options = new Options();
-		
-		Option hostnameOp = new Option("h", "hostname", true, "hostname adress");
-		hostnameOp.setRequired(false);
-        options.addOption(hostnameOp);
-        
-        CommandLineParser parser = new DefaultParser();
-        HelpFormatter formatter = new HelpFormatter();
-        CommandLine cmd;
-        
-        try {
-            cmd = parser.parse(options, args);
-        } catch (ParseException e) {
-            System.out.println(e.getMessage());
-            formatter.printHelp("ClientGet", options);
-
-            System.exit(1);
-            return;
-        }
-		
-		String hostname = cmd.getOptionValue("hostname", "localhost:9090");
+		String hostname = "localhost:9090";
+		if( args.length > 0)
+			hostname = args[0];
 
 		Client client = ClientBuilder.newBuilder()
 				.hostnameVerifier(new InsecureHostnameVerifier())
@@ -72,9 +48,9 @@ public class ClientGet {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("[0] Sair\n[1] Get\n[2] Putset\n[3] Getset\n[4]"
-					+ " ReadElem\n[5] isElem\n[6] Benchmark1\n[7] Benchmark2\n[8]"
-					+ " Benchmark3\n[9] Benchmark4\n[10] Benchmark5");
+			System.out.println("[0] Sair\n[1] Get\n[2] PutSet\n[3] Getset\n[4] AddElem\n[5] RemoveSet\n[6] WriteElem\n[7]"
+					+ " ReadElem\n[8] isElem\n[9] Benchmark1\n[10] Benchmark2\n[11]"
+					+ " Benchmark3\n[12] Benchmark4\n[13] Benchmark5");
 	        String s = br.readLine();
 			switch(s){
 			case "0": run = false;
@@ -90,31 +66,42 @@ public class ClientGet {
 				break;
 			case "2"://Test #2 [PUTSET]
 				Future<Response> key = target.path("/server/putset")
-						.request().header("key", "mykey").async().post(Entity.entity(new Entry(1,"2",3,"4",5,"6"), MediaType.APPLICATION_JSON));
+						.request().header("key", "mykey").async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/putset ; Response: "+ key.get().readEntity(Long.class));
 				break;
 			case "3"://Test #3 [GETSET]
 				Future<Response> set = target.path("/server/getset").request().header("key", "mykey").async().get();
 				System.out.println("Call: /server/getset ; Response: "+ set.get().readEntity(Entry.class));
 				break;
-			case "4"://Test #4 [READELEM]
+			case "4"://test #4 [ADDELEM]
+				break;
+			case "5"://test #5 [REMOVESET]
+				break;
+			case "6"://test #6 [WRITEELEM]
+				JSONObject jsonobj = new JSONObject();
+				jsonobj.append("element", 2);
+				Future<Response> val = target.path("/server/writeelem").request()
+						.header("key", "mykey").header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));
+				System.out.println(val.toString());
+				break;
+			case "7"://Test #7 [READELEM]
 				Response elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").get();
 				System.out.println("Call: /server/readelem ; Response: " + elem.getEntity());
 				break;
-			case "5"://Test #5 [ISELEM]
+			case "8"://Test #8 [ISELEM]
 				Response iselem = target.path("/server/iselem").queryParam("elem", "two").request().header("key","mykey").get();
 				System.out.println("Call: /server/iselem ; Response: " + iselem.getEntity());
 				break;
-			case "6"://Test #6 [BENCHMARK1]
+			case "9"://Test #9 [BENCHMARK1]
 				test.benchmark1();
 				break;
-			case "7"://Test #7 [BENCHMARK2]
+			case "10"://Test #10 [BENCHMARK2]
 				test.benchmark2();
 				break;
-			case "8"://Test #7 [BENCHMARK3]
+			case "11"://Test #11 [BENCHMARK3]
 				test.benchmark3();
 				break;
-			case "9"://Test #7 [BENCHMARK4]
+			case "12"://Test #12 [BENCHMARK4]
 				test.benchmark4();
 				break;
 			}
