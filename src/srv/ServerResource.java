@@ -155,10 +155,6 @@ public class ServerResource {
 		JSONObject o = new JSONObject(json);
 		JSONArray jdata = o.getJSONArray("element");
 		Object obj = jdata.get(0);
-<<<<<<< HEAD
-		
-=======
->>>>>>> 3ec1fe9ab1b9c983419145abe9882341c2ad2943
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
@@ -178,14 +174,7 @@ public class ServerResource {
             		Entry entry = res.v();
             		entry.values.remove(pos);
             		entry.values.add(pos,obj);
-<<<<<<< HEAD
-            		
-            		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",entry);
-=======
-            		System.out.println(entry.toString());
-            		System.out.println("SENDING API WRITE");
             		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",entry);
->>>>>>> 3ec1fe9ab1b9c983419145abe9882341c2ad2943
             		Future<Object> future = Patterns.ask(proxy, write, timeout);
             		future.onComplete(new OnComplete<Object>() {
 
