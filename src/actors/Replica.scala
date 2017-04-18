@@ -50,6 +50,7 @@ class Replica extends Actor{
       context.stop(self)
     }
     case SetByzantine(chance: Int) => {
+      println(self.path + " is now byzantine!")
       byzantine = true;
       this.chance = chance 
     }

@@ -32,7 +32,7 @@ public class ClientGet0 {
 	static final char[] KEY_PASSWORD = "changeit".toCharArray();
 
 	public static void main(String[] args) throws Exception {
-Options options = new Options();
+		Options options = new Options();
 		
 		Option hostnameOp = new Option("h", "hostname", true, "hostname adress");
 		hostnameOp.setRequired(false);
