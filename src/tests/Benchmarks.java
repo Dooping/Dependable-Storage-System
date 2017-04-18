@@ -87,6 +87,7 @@ public class Benchmarks {
 			value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
+					.header("key", "mykey")
 					.async()
 					.get();
 			
