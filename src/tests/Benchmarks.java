@@ -13,6 +13,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.json.JSONObject;
+
 import Datatypes.Entry;
 
 public class Benchmarks {
@@ -186,7 +188,73 @@ public class Benchmarks {
 		
 	}
 	
-	public void benchmark5(){
+	public void benchmark5() throws Exception{
+		
+		fw = new FileWriter(resFile,true); //the true is to append to the end of file
+		sb = new StringBuilder();//clears the previous stringbuilder
+		Future<Response> value;
+		long nanotimeStart,nanotimeEnd ;
+		int status;
+		
+		//10 PUTSETS 10 GETSETS 10 ADDELEMENTS 10 WRITEELEMS 10 READELEMS
+		for(int i = 0 ; i < 100 ; i ++){
+			
+			//PUTSET
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/putset")
+					.request().header("key", "mykey").async().
+					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+			
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        String msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("5","PUT",status,msstring);
+			
+	        //GETSET
+	        nanotimeStart = System.nanoTime();
+			value = target.path("/server/getset")
+					.request()
+					.accept(MediaType.APPLICATION_JSON)
+					.async()
+					.get();
+			
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("5","GET",status,msstring);
+	         
+	        //WRITELEM
+	        nanotimeStart = System.nanoTime();
+	        JSONObject jsonobj = new JSONObject();
+			jsonobj.append("element", 2);
+			value = target.path("/server/writeelem").request()
+					.header("key", "mykey").header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));
+			
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("5","WRITE",status,msstring);
+	        
+	        //READELEM
+	        nanotimeStart = System.nanoTime();
+			value = target.path("/server/readelem")
+					.request().header("key", "mykey").header("pos", 1)
+					.accept(MediaType.APPLICATION_JSON)
+					.async()
+					.get();
+			
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("5","READ",status,msstring);
+		}
+		
+		fw.write(sb.toString());
+		fw.close();
 		
 	}
 	

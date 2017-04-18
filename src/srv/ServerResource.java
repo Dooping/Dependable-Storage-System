@@ -155,7 +155,7 @@ public class ServerResource {
 		JSONObject o = new JSONObject(json);
 		JSONArray jdata = o.getJSONArray("element");
 		Object obj = jdata.get(0);
-		System.out.println("JAAAYSOON");
+		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
@@ -173,25 +173,21 @@ public class ServerResource {
             	}else{
             		ReadResult res = (ReadResult)result;
             		Entry entry = res.v();
-            		//asyncResponse.resume(Response.ok().entity(res.v()).build());
             		entry.values.remove(pos);
             		entry.values.add(pos,obj);
-            		System.out.println(entry.toString());
-            		System.out.println("SENDING API WRITE");
+            		
             		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",entry);
             		Future<Object> future = Patterns.ask(proxy, write, timeout);
             		future.onComplete(new OnComplete<Object>() {
 
                         public void onComplete(Throwable failure, Object result) {
-                        	System.out.println("COMPLETE");
                         	if(failure != null){
                         		if(failure.getMessage() != null)
                         			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
                         		else
                         			asyncResponse.resume(Response.serverError());
                         	}else{
-                        		//long res = (long)result;
-                        		System.out.println("WRITEELEM " + result.toString());
+                        		long res = (long)result;
                         		asyncResponse.resume(Response.ok().entity(res).build());
                         	}
                         }
