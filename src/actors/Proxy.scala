@@ -120,6 +120,17 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       requests+=(nonce -> message)
       router1 ! Broadcast(ReadTag(nonce, key))
     }
+    case APIWrite(nonce: Long, key: String, id: String, _) => {
+      if (replicasCrashed<replicasToCrash)
+        if(r.nextInt(100)<chance){
+          router1 ! CrashReplica
+          replicasCrashed+=1
+        }
+      val message = new Request(sender,"WriteStep1", id)
+      message.max = APIWrite(nonce, key, id, null)
+      requests+=(nonce -> message)
+      router1 ! Broadcast(ReadTag(nonce, key))
+    }
     case Ack(nonce: Long) => {
       val tuple = (sender.path, Ack(nonce))
       val request = requests(nonce)
