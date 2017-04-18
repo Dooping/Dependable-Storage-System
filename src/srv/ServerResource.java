@@ -103,7 +103,7 @@ public class ServerResource {
             			asyncResponse.resume(Response.serverError());
             	}else{
             		ReadResult res = (ReadResult)result;
-                	System.out.println(result);
+                	//System.out.println(result);
             		asyncResponse.resume(Response.ok().entity(res.v()).build());
             	}
             }
