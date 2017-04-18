@@ -59,18 +59,22 @@ public class ServerResource {
 	@ManagedAsync
 	public void putset(@HeaderParam("key") String key, Entry entry, @Suspended final AsyncResponse asyncResponse){
 		System.out.println("[PUTSET] " + entry.toString());
-		System.out.println(entry.toString());
+		//System.out.println(entry.toString());
 		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		System.out.println(proxy.pathString());
+		//System.out.println(proxy.pathString());
 		APIWrite write = new APIWrite(System.nanoTime(), "mykey","clientidip",dummyEntry);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
             	
+<<<<<<< HEAD
+=======
+            	System.out.println(result);
+>>>>>>> 583072bada32b3921c110f0a7ae5a86862c70547
             	if(failure != null){
             		if(failure.getMessage() != null)
             			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
@@ -97,15 +101,23 @@ public class ServerResource {
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
+<<<<<<< HEAD
             	
+=======
+            	System.out.println(result);
+>>>>>>> 583072bada32b3921c110f0a7ae5a86862c70547
             	if(failure != null){
             		if(failure.getMessage() != null)
             			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
             		else
             			asyncResponse.resume(Response.serverError());
             	}else{
+<<<<<<< HEAD
             		ReadResult res = (ReadResult)result;
                 	System.out.println(result);
+=======
+                	ReadResult res = (ReadResult)result;
+>>>>>>> 583072bada32b3921c110f0a7ae5a86862c70547
             		asyncResponse.resume(Response.ok().entity(res.v()).build());
             	}
             }
