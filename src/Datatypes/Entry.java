@@ -29,5 +29,9 @@ public class Entry implements Serializable{
 	public Object getElem(int pos){
 		return values.get(pos);
 	}
+	
+	public void addElem(){
+		values.add(null);
+	}
 
 }

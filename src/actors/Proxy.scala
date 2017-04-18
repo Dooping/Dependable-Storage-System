@@ -3,7 +3,6 @@ package actors
 import akka.actor.{Actor, ActorRef, Props, ActorPath}
 import Datatypes._
 import Datatypes.Request
-import messages._
 import akka.routing.FromConfig
 import akka.actor.ActorSelection.toScala
 import scala.collection.mutable.{Set, HashMap}
