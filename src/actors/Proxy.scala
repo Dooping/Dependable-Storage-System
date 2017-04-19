@@ -55,7 +55,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
             }
           }
           else
-            println(self.path + ": verificação da assinatura falhou")
+            println(self.path + ": verificacao da assinatura falhou")
         }
       }
     case ReadResult(_, _, _, nonce: Long, key: String) => {

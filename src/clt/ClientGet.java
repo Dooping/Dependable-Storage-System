@@ -79,8 +79,8 @@ public class ClientGet {
 				System.out.println("Call: /server/addelem ; Response: "+addelem.get().readEntity(Long.class));
 				break;
 			case "5"://test #5 [REMOVESET]
-				Future<Response> resu = target.path("/server/removeset").request().header("key", "mykey").async().delete();
-				System.out.println("Call: /server/remove ; Response: "+ resu.toString());
+				Future<Response> delete = target.path("/server/removeset").request().header("key", "mykey").async().delete();
+				System.out.println("Call: /server/removeset ; Response: "+delete.get().readEntity(Long.class));
 				break;
 			case "6"://test #6 [WRITEELEM]
 				JSONObject jsonobj = new JSONObject();
@@ -111,6 +111,9 @@ public class ClientGet {
 				break;
 			case "12"://Test #12 [BENCHMARK4]
 				test.benchmark4();
+				break;
+			case "13":
+				test.benchmark5();
 				break;
 			}
 			

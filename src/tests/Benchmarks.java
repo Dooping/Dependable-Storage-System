@@ -87,6 +87,7 @@ public class Benchmarks {
 			value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
+					.header("key", "mykey")
 					.async()
 					.get();
 			
@@ -127,9 +128,10 @@ public class Benchmarks {
 	        
 	        //GETSET
 	        nanotimeStart = System.nanoTime();
-			value = target.path("/server/getset")
+	        value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
+					.header("key", "mykey")
 					.async()
 					.get();
 			
@@ -197,14 +199,13 @@ public class Benchmarks {
 		int status;
 		
 		//10 PUTSETS 10 GETSETS 10 ADDELEMENTS 10 WRITEELEMS 10 READELEMS
-		for(int i = 0 ; i < 100 ; i ++){
+		for(int i = 0 ; i < 30 ; i ++){
 			
 			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey").async().
-					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
-			
+					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -213,12 +214,12 @@ public class Benchmarks {
 			
 	        //GETSET
 	        nanotimeStart = System.nanoTime();
-			value = target.path("/server/getset")
+	        value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
+					.header("key", "mykey")
 					.async()
-					.get();
-			
+					.get();		
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -230,8 +231,7 @@ public class Benchmarks {
 	        JSONObject jsonobj = new JSONObject();
 			jsonobj.append("element", 2);
 			value = target.path("/server/writeelem").request()
-					.header("key", "mykey").header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));
-			
+					.header("key", "mykey").header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -244,13 +244,44 @@ public class Benchmarks {
 					.request().header("key", "mykey").header("pos", 1)
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
-					.get();
-			
+					.get();			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("5","READ",status,msstring);
+	             
+	        //ADDELEM
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/addelem")
+					.request().header("key", "mykey").async().post(null);			
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("5","ADD",status,msstring);
+	        
+	        //ISELEM
+	        nanotimeStart = System.nanoTime();
+	        JSONObject json = new JSONObject();
+			json.append("element", "two");
+			value = target.path("/server/iselem").request()
+					.header("key","mykey").async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("5","ISEL",status,msstring);
+	        
+	        //REMOVESET
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/removeset").request().header("key", "mykey").async().delete();
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder("5","REM",status,msstring);
+	        
 		}
 		
 		fw.write(sb.toString());
