@@ -48,9 +48,9 @@ public class ClientGet {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("[0] Sair\n[1] Get\n[2] PutSet\n[3] Getset\n[4] AddElem\n[5] RemoveSet\n[6] WriteElem\n[7]"
-					+ " ReadElem\n[8] isElem\n[9] Benchmark1\n[10] Benchmark2\n[11]"
-					+ " Benchmark3\n[12] Benchmark4\n[13] Benchmark5");
+			System.out.println("[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
+					+ " ReadElem\n[7] isElem\n[8] Benchmark1\n[9] Benchmark2\n[10]"
+					+ " Benchmark3\n[11] Benchmark4\n[12] Benchmark5");
 	        String s = br.readLine();
 			switch(s){
 			case "0": run = false;
