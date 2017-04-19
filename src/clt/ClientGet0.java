@@ -47,7 +47,7 @@ public class ClientGet0 {
 		hostnameOp.setRequired(false);
         options.addOption(hostnameOp);
         
-        Option keystoreOp = new Option("k", "keystore", true, "keystore path");
+        Option keystoreOp = new Option("k", "keystore", true, "truststore path");
         keystoreOp.setRequired(false);
         options.addOption(keystoreOp);
         
@@ -59,7 +59,7 @@ public class ClientGet0 {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
-            formatter.printHelp("ClientGet", options);
+            formatter.printHelp("ClientGet0", options);
 
             System.exit(1);
             return;
