@@ -187,9 +187,9 @@ public class ServerResource {
             		ReadResult res = (ReadResult)result;
             		Entry entry = res.v();
             		if(entry == null)
-            			asyncResponse.resume(Response.serverError());
+            			asyncResponse.resume(Response.status(Response.Status.NOT_FOUND).entity("Key not found: " + key).build());
             		else if(pos>entry.values.size())
-            			asyncResponse.resume(Response.serverError());
+            			asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity("Position not valid: " + pos).build());
             		else{
 	            		entry.values.remove(pos);
 	            		entry.values.add(pos,obj);
@@ -240,7 +240,7 @@ public class ServerResource {
             		if(res.v()!=null)
             			asyncResponse.resume(Response.ok().entity(res.v().getElem(pos)).build());
             		else
-            			asyncResponse.resume(Response.ok().entity(null).build());
+            			asyncResponse.resume(Response.status(Response.Status.NOT_FOUND).entity("Key not found: " + key).build());
             	}
             }
         }, actorSystem.dispatcher());
