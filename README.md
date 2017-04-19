@@ -15,8 +15,8 @@
 
 ### ClientGet0
 ```
- -k,--keystore <arg>     keystore path
- -h,--hostname <arg>     rest Server address 
+ -k,--keystore <arg>     truststore path
+ -h,--hostname <arg>     rest server address 
 ```
 
 ## Running Instructions:
@@ -27,4 +27,6 @@ srv.SSLRestServer0 -t proxy -k ./server.jks -r akka.ssl.tcp://Spawner1@192.168.9
 ```
 - Create a Client to send requests or run benchmarks e.g. clt.ClientGet0 -k ./client.jks -h 192.168.99.1
 
+## Other notes:
+- To change keystores and truststores used by the replicas and the proxy actors to communicate with each other we must go to main/resources/application.conf and change their path and passwords
 
