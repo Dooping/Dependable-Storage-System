@@ -31,7 +31,7 @@ import actors.Replica;
 import akka.actor.*;
 
 public class SSLRestServer0 {
-	static final File KEYSTORE = new File("./home/csd/server.jks");
+	static final File KEYSTORE = new File("./server.jks");
 	static final char[] JKS_PASSWORD = "changeit".toCharArray();
 	static final char[] KEY_PASSWORD = "changeit".toCharArray();
 
@@ -142,8 +142,12 @@ Config defaultCfg = ConfigFactory.load();
 			tmf.init(keyStore);
 
 			sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+			
+			SSLEngineConfigurator engineConfigurator = new SSLEngineConfigurator(sslContext);
+			engineConfigurator.setClientMode(false);
+			engineConfigurator.setNeedClientAuth(false);
 
-			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, config, true, new SSLEngineConfigurator(sslContext));
+			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, config, true, engineConfigurator);
 			System.err.println("SSL REST Server ready... @ " + InetAddress.getLocalHost().getHostAddress());
 			break;
 		}
