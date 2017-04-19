@@ -37,20 +37,6 @@ public class ServerResource {
 	@Context ActorSystem actorSystem;
 	String value = "default";
 	Entry dummyEntry = new Entry(1,"two",3,"four",5,"six");
-
-	
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-    @ManagedAsync
-    public void asyncGet(@Suspended final AsyncResponse asyncResponse) {
-		asyncResponse.resume(Response.ok(dummyEntry,MediaType.APPLICATION_JSON).build());
-    }
-
-	@PUT
-	@Produces(MediaType.APPLICATION_JSON)
-	public void set( String val) {
-		value = val;
-	}
 	
 	@POST
 	@Path("/putset")

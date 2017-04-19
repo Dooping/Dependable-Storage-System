@@ -55,64 +55,55 @@ public class ClientGet {
 			switch(s){
 			case "0": run = false;
 					break;
-			case "1"://Test #1 [ASYNC]
-				final Future<Entry> value = target.path("/server")
-					.request()
-					.accept(MediaType.APPLICATION_JSON)
-					.async()
-					.get(Entry.class);
-				System.out.println(value.get());
-				
-				break;
-			case "2"://Test #2 [PUTSET]
+			case "1"://Test #1 [PUTSET]
 				Future<Response> key = target.path("/server/putset")
 						.request().header("key", "mykey").async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/putset ; Response: "+ key.get().readEntity(Long.class));
 				break;
-			case "3"://Test #3 [GETSET]
+			case "2"://Test #2 [GETSET]
 				Future<Response> set = target.path("/server/getset").request().header("key", "mykey").async().get();
 				System.out.println("Call: /server/getset ; Response: "+ set.get().readEntity(Entry.class));
 				break;
-			case "4"://test #4 [ADDELEM]
+			case "3"://test #3 [ADDELEM]
 				Future<Response> addelem = target.path("/server/addelem").request()
 					.header("key", "mykey").async().post(Entity.entity("", MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/addelem ; Response: "+addelem.get().readEntity(Long.class));
 				break;
-			case "5"://test #5 [REMOVESET]
+			case "4"://test #4 [REMOVESET]
 				Future<Response> delete = target.path("/server/removeset").request().header("key", "mykey").async().delete();
 				System.out.println("Call: /server/removeset ; Response: "+delete.get().readEntity(Long.class));
 				break;
-			case "6"://test #6 [WRITEELEM]
+			case "5"://test #5 [WRITEELEM]
 				JSONObject jsonobj = new JSONObject();
 				jsonobj.append("element", 2);
 				Future<Response> val = target.path("/server/writeelem").request()
 						.header("key", "mykey").header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));
 				System.out.println(val.toString());
 				break;
-			case "7"://Test #7 [READELEM]
+			case "6"://Test #6 [READELEM]
 				Future<Response> elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").async().get();
 				System.out.println("Call: /server/readelem ; Response: " + elem.get().readEntity(String.class));
 				break;
-			case "8"://Test #8 [ISELEM]
+			case "7"://Test #7 [ISELEM]
 				JSONObject json = new JSONObject();
 				json.append("element", "two");
 				Future<Response> iselem = target.path("/server/iselem").request()
 						.header("key","mykey").async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/iselem ; Response: " + iselem.get().readEntity(String.class));
 				break;
-			case "9"://Test #9 [BENCHMARK1]
+			case "8"://Test #8 [BENCHMARK1]
 				test.benchmark1();
 				break;
-			case "10"://Test #10 [BENCHMARK2]
+			case "9"://Test #9 [BENCHMARK2]
 				test.benchmark2();
 				break;
-			case "11"://Test #11 [BENCHMARK3]
+			case "10"://Test #10 [BENCHMARK3]
 				test.benchmark3();
 				break;
-			case "12"://Test #12 [BENCHMARK4]
+			case "11"://Test #11 [BENCHMARK4]
 				test.benchmark4();
 				break;
-			case "13":
+			case "12"://Test #12 [BENCHMARK5]
 				test.benchmark5();
 				break;
 			}
