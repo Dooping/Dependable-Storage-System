@@ -3,6 +3,10 @@ package srv;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.UriBuilder;
 
@@ -52,6 +56,11 @@ public class SSLRestServer {
         Option quorumOp = new Option("q", "quorum", true, "quorum size");
         quorumOp.setRequired(false);
         options.addOption(quorumOp);
+        
+        Option arrayOp = new Option("r", "replicas", true, "list of replica's adresses");
+        arrayOp.setArgs(Option.UNLIMITED_VALUES);
+        arrayOp.setRequired(false);
+        options.addOption(arrayOp);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -66,6 +75,10 @@ public class SSLRestServer {
             System.exit(1);
             return;
         }
+        
+        List<String> replicas = new ArrayList<String>();
+        if(cmd.hasOption("replicas"))
+        	replicas = Arrays.asList(cmd.getOptionValues("replicas"));
         
 		int n = Integer.parseInt(cmd.getOptionValue("number", "4"));
 		int crash = Integer.parseInt(cmd.getOptionValue("crash", "0"));
@@ -92,7 +105,7 @@ public class SSLRestServer {
 			URI baseUri = UriBuilder.fromUri("http://0.0.0.0/").port(9090).build();
 			ResourceConfig config = new ResourceConfig();
 			ActorSystem system = ActorSystem.create("Proxy",ConfigFactory.load().getConfig("Proxy").withFallback(defaultCfg));
-			system.actorOf(Props.create(Proxy.class, crash, byzantine, chance, quorum),"proxy");
+			system.actorOf(Props.create(Proxy.class, crash, byzantine, chance, quorum, replicas),"proxy");
 			config.register(new AbstractBinder() {
 	            protected void configure() {
 	                bind(system).to(ActorSystem.class);

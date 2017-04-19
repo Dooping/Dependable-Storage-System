@@ -2,24 +2,23 @@ package actors
 
 import akka.actor.{Actor, ActorRef, Props, ActorPath}
 import Datatypes._
-import Datatypes.Request
-import akka.routing.FromConfig
-import akka.actor.ActorSelection.toScala
 import scala.collection.mutable.{Set, HashMap}
+import scala.collection.immutable.List
 import security.Encryption
-import akka.routing.Broadcast
+import akka.routing.{Broadcast, FromConfig, RoundRobinGroup}
 import scala.util.Random
+import scala.collection.JavaConversions._
 
-class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum: Int) extends Actor {
+class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum: Int, replicas: java.util.List[String]) extends Actor {
   
   val r = Random
   var replicasCrashed = 0;
   
   val requests = HashMap.empty[Long, Request]
   
-  val paths = List("akka.ssl.tcp://Spawner1@localhost:2552/user/r1", "akka.ssl.tcp://Spawner1@localhost:2552/user/r2")
+  val list: List[String] = replicas.toList
   
-  val router1: ActorRef = context.actorOf(FromConfig.props(Props[Replica]), "router1")
+  val router1: ActorRef = context.actorOf(RoundRobinGroup(list).props(), "router1")
   
   var i = 0
   while (i < byzantineReplicas){
