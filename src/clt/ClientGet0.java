@@ -43,7 +43,7 @@ public class ClientGet0 {
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
 		
-		Option hostnameOp = new Option("h", "hostname", true, "hostname adress");
+		Option hostnameOp = new Option("h", "hostname", true, "rest server address");
 		hostnameOp.setRequired(false);
         options.addOption(hostnameOp);
         
