@@ -299,5 +299,120 @@ public class ServerResource {
             }
         }, actorSystem.dispatcher());
 	}
+	
+	
+	
+	
+		//=====EXTENSIVE API======
+		@GET
+		@Path("/sum")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response sum(@HeaderParam("pos") int pos,@HeaderParam("keyOne")String keyOne,@HeaderParam("keyTwo")String keyTwo, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+
+		@GET
+		@Path("/sumall")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response sumAll(@HeaderParam("pos")int pos, @Suspended final AsyncResponse asyncResponse){	
+			return Response.ok().build();
+		}
+		
+		@GET
+		@Path("/mult")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response mult(@HeaderParam("pos") int pos,@HeaderParam("keyOne") String keyOne, @HeaderParam("keyTwo") String keyTwo, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@GET
+		@Path("/multall")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response multAll(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searcheq")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response searchEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searchneq")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response searchNEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searchentryor")
+		@Produces(MediaType.APPLICATION_JSON)
+		public Response searchEntryOR(String json, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searchentryand")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response searchEntryAND(@QueryParam("jsone")String jsonOne,@QueryParam("jstwo")String jsonTwo, @QueryParam("jsthree")String jsonThree, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@GET
+		@Path("/orderls")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response orderLS(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){	
+			return Response.ok().build();
+		}
+		
+		@GET
+		@Path("/ordersl")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response orderSL(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searchgt")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response searchGt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searchgteq")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response searchGtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){	
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searchlt")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response searchLt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){		
+			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/searchlteq")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public Response searchLtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
 
 }
