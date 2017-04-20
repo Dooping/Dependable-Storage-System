@@ -148,15 +148,13 @@ public class ServerResource {
 		future.onComplete(new OnComplete<Object>() {
 
             public void onComplete(Throwable failure, Object result) {
-            	
             	if(failure != null){
             		if(failure.getMessage() != null)
             			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
             		else
             			asyncResponse.resume(Response.serverError());
             	}else{
-            		long res = (long)result;
-            		asyncResponse.resume(Response.ok().entity(res).build());
+            		asyncResponse.resume(Response.ok());
             	}
             }
         }, actorSystem.dispatcher());
