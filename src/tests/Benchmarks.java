@@ -37,6 +37,8 @@ public class Benchmarks {
 		sb.append("status");
 		sb.append(",");
 		sb.append("time");
+		sb.append(',');
+		sb.append("type");
 		sb.append('\n');
 		
 		fw.write(sb.toString());
