@@ -26,6 +26,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import actors.FaultDetection;
 import actors.Proxy;
 import actors.Replica;
 import akka.actor.*;
@@ -45,7 +46,7 @@ Config defaultCfg = ConfigFactory.load();
 		keystoreOp.setRequired(false);
         options.addOption(keystoreOp);
 		
-		Option typeOp = new Option("t", "type", true, "type of server (spawner1/spawner2/proxy)");
+		Option typeOp = new Option("t", "type", true, "type of server (spawner1/spawner2/proxy/fault)");
 		typeOp.setRequired(true);
         options.addOption(typeOp);
         
@@ -115,6 +116,11 @@ Config defaultCfg = ConfigFactory.load();
 			System.out.println("Spawner2 created...");
 			for(int i = 1; i <= n; i++)
 				spawner2.actorOf(Props.create(Replica.class),"r"+i);
+			break;
+		case "fault":
+			ActorSystem faultDetection = ActorSystem.create("FaultDetection",ConfigFactory.load().getConfig("FaultDetection").withFallback(defaultCfg));
+			System.out.println("Fault Detection Server created...");
+			faultDetection.actorOf(Props.create(FaultDetection.class),"faultDetection");
 			break;
 		case "proxy":
 			URI baseUri = UriBuilder.fromUri("http://0.0.0.0/").port(9090).build();

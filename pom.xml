@@ -5,7 +5,7 @@
 	<artifactId>csd-p01</artifactId>
 	<version>0.1</version>
 
-	<build>
+  <build>
 		<sourceDirectory>src</sourceDirectory>
 		<plugins>
 			<plugin>
