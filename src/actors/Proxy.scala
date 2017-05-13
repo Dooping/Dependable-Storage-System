@@ -9,16 +9,19 @@ import akka.routing.{Broadcast, FromConfig, RoundRobinGroup}
 import scala.util.Random
 import scala.collection.JavaConversions._
 
-class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum: Int, replicas: java.util.List[String]) extends Actor {
+class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum: Int, faultServerAddress: String) extends Actor {
   
   val r = Random
-  var replicasCrashed = 0;
+  var replicasCrashed = 0
   
   val requests = HashMap.empty[Long, Request]
   
-  val list: List[String] = replicas.toList
+  //var list: List[String] = replicas.toList
+  val faultServer = context.actorSelection(faultServerAddress)
   
-  val router1: ActorRef = context.actorOf(RoundRobinGroup(list).props(), "router1")
+  faultServer ! RegisterProxy()
+  
+  var router1 = ActorRef.noSender
   
   var i = 0
   while (i < byzantineReplicas){
@@ -139,6 +142,9 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
           request.sender ! request.max
         else if(request.rType == "WriteStep2")
           request.sender ! nonce
+    }
+    case NewReplicaList(replicas) => {
+      router1 = context.actorOf(RoundRobinGroup(replicas.map(_.path.toString())).props(), "router1")
     }
     case _ => println("recebeu mensagem diferente")
   }
