@@ -37,7 +37,7 @@ class FaultDetection extends Actor{
     }
     case RegisterSentinent() => {
       println(sender.path + " registered as sentinent!")
-      val cancellable = context.system.scheduler.schedule(2 seconds, 2 seconds, new SyncReplica(sender))(context.system.dispatcher)
+      val cancellable = context.system.scheduler.schedule(1 seconds, 2 seconds, new SyncReplica(sender))(context.system.dispatcher)
       sentinentSync += (sender -> cancellable)
       sentinent += sender
     }

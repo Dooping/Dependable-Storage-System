@@ -16,7 +16,7 @@ class Spawner(replicas: Int, sentinent: Int, faultServerAddress: String) extends
   
   def receive = {
     case NewSentinent() => {
-      context.actorOf(Props(new Replica(true, faultServerAddress)), "r"+replicaNumber)
+      context.actorOf(Props(new Replica(false, faultServerAddress)), "r"+replicaNumber)
       replicaNumber += 1
     }
   }
