@@ -5,12 +5,9 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
@@ -21,9 +18,10 @@ import Datatypes.*;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.dispatch.OnComplete;
-import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import auxiliary.EntryConfig;
+
 import org.glassfish.jersey.server.ManagedAsync;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -37,6 +35,11 @@ public class ServerResource {
 	@Context ActorSystem actorSystem;
 	String value = "default";
 	Entry dummyEntry = new Entry(1,"two",3,"four",5,"six");
+	EntryConfig conf;
+	
+	public ServerResource(){
+		conf = new EntryConfig(EntryConfig.CONF_FILE);
+	}
 	
 	@POST
 	@Path("/putset")
@@ -44,9 +47,11 @@ public class ServerResource {
 	@ManagedAsync
 	public void putset(@HeaderParam("key") String key, Entry entry, @Suspended final AsyncResponse asyncResponse){
 		
+		Entry crypt = conf.encryptEntry(entry);
+		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",dummyEntry);
+		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",crypt);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -69,9 +74,9 @@ public class ServerResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/getset")
 	public void getSet(@HeaderParam("key") String key, @Suspended final AsyncResponse asyncResponse){	
+		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-		
 		Read read = new Read(System.nanoTime(),key);
 		Future<Object> future = Patterns.ask(proxy, read, timeout);
 		future.onComplete(new OnComplete<Object>() {
@@ -85,7 +90,7 @@ public class ServerResource {
             			asyncResponse.resume(Response.serverError());
             	}else{
             		ReadResult res = (ReadResult)result;
-            		asyncResponse.resume(Response.ok().entity(res.v()).build());
+            		asyncResponse.resume(Response.ok().entity(conf.decryptEntry(res.v())).build());
             	}
             }
         }, actorSystem.dispatcher());
