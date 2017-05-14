@@ -14,10 +14,10 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
   
   class QuorumTimeout(quorum: Set[Any], replicas: List[ActorRef]) extends Runnable {
     def run = {
-      val errors = quorum.filterNot(r => replicas.contains(r.asInstanceOf[(ActorRef, _)]._1)).map(_.asInstanceOf[ActorRef])
+      val errors = quorum.filterNot(r => replicas.contains(r.asInstanceOf[(ActorRef, _)]._1)).map(_.asInstanceOf[(ActorRef, _)]._1)
       errors.foreach(e => faultServer ! Vote(e))
       if(errors.size>0)
-        println(errors)
+        println("Failure candidates: "+errors)
     }
   }
   
@@ -51,66 +51,42 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
     }
     case ReadResult(tag: Tag, v: Entry, sig: String, nonce: Long, key: String) => {
         val request = requests(nonce)
-        if(request.rType == "ReadStep1"){
-          if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
-            val tuple = (sender.path, ReadResult(tag, v, sig, nonce, key))
-            request.quorum += tuple
-            if (request.quorum.size==minQuorum){
-              request.rType = "ReadStep2" 
-              val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
-              request.max = max
-              //request.quorum = Set.empty[Any]
-              context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
-              router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
-            }
+        if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
+          val tuple = (sender, ReadResult(tag, v, sig, nonce, key))
+          request.quorum += tuple
+          if (request.quorum.size==minQuorum){
+            request.rType = "ReadStep2" 
+            val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
+            request.max = max
+            //request.quorum = Set.empty[Any]
+            context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+            router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
           }
-          else
-            println(self.path + ": verificacao da assinatura falhou")
         }
+        else
+          println(self.path + ": verificacao da assinatura falhou")
       }
     case ReadResult(_, _, _, nonce: Long, key: String) => {
         val request = requests(nonce)
-        if(request.rType == "ReadStep1"){
-            val tuple = (sender.path, ReadResult(Tag(0,""), null, null, nonce, key))
-            request.quorum += tuple
-            if (request.quorum.size==minQuorum){
-              request.rType = "ReadStep2" 
-              val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
-              request.max = max
-              //request.quorum = Set.empty[Any]
-              if(max.tag.sn > 0){
-                context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
-                router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
-              }
-              else
-                request.sender ! max
-            }
+        val tuple = (sender, ReadResult(Tag(0,""), null, null, nonce, key))
+        request.quorum += tuple
+        if (request.quorum.size==minQuorum){
+          request.rType = "ReadStep2" 
+          val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
+          request.max = max
+          //request.quorum = Set.empty[Any]
+          if(max.tag.sn > 0){
+            context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+            router1 ! Broadcast(Write(max.tag, max.v, max.sig, nonce, key))
+          }
+          else
+            request.sender ! max
         }
       }
     case ReadTagResult(tag: Tag, sig: String, nonce: Long) => {
         val request = requests(nonce)
-        if(request.rType == "WriteStep1"){
-          if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
-            val tuple = (sender.path, ReadTagResult(tag, sig, nonce))
-            request.quorum += tuple
-            if (request.quorum.size==minQuorum){
-              request.rType = "WriteStep2"
-              val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadTagResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
-              //request.quorum = Set.empty[Any]
-              context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
-              var newTag = Tag(max.tag.sn+1,request.id)
-              val write = request.max.asInstanceOf[APIWrite]
-              router1 ! Broadcast(Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key))
-            }
-          }
-          else
-            println(self.path + ": verificacao da assinatura falhou")
-        }
-    }
-    case ReadTagResult(_, _, nonce: Long) => {
-        val request = requests(nonce)
-        if(request.rType == "WriteStep1"){
-          val tuple = (sender.path, ReadTagResult(Tag(0,""), null, nonce))
+        if (Encryption.verifySign(keystorePath, tag.toString().getBytes(),sig, true)){
+          val tuple = (sender, ReadTagResult(tag, sig, nonce))
           request.quorum += tuple
           if (request.quorum.size==minQuorum){
             request.rType = "WriteStep2"
@@ -121,6 +97,22 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
             val write = request.max.asInstanceOf[APIWrite]
             router1 ! Broadcast(Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key))
           }
+        }
+        else
+          println(self.path + ": verificacao da assinatura falhou")
+    }
+    case ReadTagResult(_, _, nonce: Long) => {
+        val request = requests(nonce)
+        val tuple = (sender, ReadTagResult(Tag(0,""), null, nonce))
+        request.quorum += tuple
+        if (request.quorum.size==minQuorum){
+          request.rType = "WriteStep2"
+          val max = request.quorum.map(_.asInstanceOf[(ActorRef,ReadTagResult)]).toList.sortWith(_._2.tag > _._2.tag)(0)._2
+          //request.quorum = Set.empty[Any]
+          context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+          var newTag = Tag(max.tag.sn+1,request.id)
+          val write = request.max.asInstanceOf[APIWrite]
+          router1 ! Broadcast(Write(newTag, write.v, Encryption.Sign(keystorePath, newTag.toString().getBytes), nonce, write.key))
         }
     }
     case APIWrite(nonce: Long, key: String, id: String, v: Entry) => {
@@ -148,7 +140,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       router1 ! Broadcast(ReadTag(nonce, key))
     }
     case Ack(nonce: Long) => {
-      val tuple = (sender.path, Ack(nonce))
+      val tuple = (sender, Ack(nonce))
       val request = requests(nonce)
       request.ackQuorum += tuple
       if (request.ackQuorum.size==minQuorum)

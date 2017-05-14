@@ -42,6 +42,7 @@ class FaultDetection extends Actor{
       sentinent += sender
     }
     case RegisterProxy() => {
+      println(sender.path + " registered as proxy!")
       proxys += sender
       sender ! NewReplicaList(replicas.toList)
     }
