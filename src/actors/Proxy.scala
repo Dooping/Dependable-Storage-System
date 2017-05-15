@@ -14,7 +14,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
   
   class QuorumTimeout(quorum: Set[Any], replicas: List[ActorRef]) extends Runnable {
     def run = {
-      val errors = quorum.filterNot(r => replicas.contains(r.asInstanceOf[(ActorRef, _)]._1)).map(_.asInstanceOf[(ActorRef, _)]._1)
+      val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, _)]._1 == r))
       errors.foreach(e => faultServer ! Vote(e))
       if(errors.size>0)
         println("Failure candidates: "+errors)
@@ -28,14 +28,11 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
   val faultServer = context.actorSelection(faultServerAddress)
   var router1 = ActorRef.noSender
   val keystorePath = context.system.settings.config.getString("akka.remote.netty.ssl.security.key-store")
+  var byzantineInit = false
   
   faultServer ! RegisterProxy()
   
-  var i = 0
-  while (i < byzantineReplicas){
-    i+=1
-    router1 ! SetByzantine(chance)
-  }
+  
   
   def receive = {
     case Read(nonce: Long, key: String) => {
@@ -151,7 +148,15 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
     }
     case NewReplicaList(replicas) => {
       replicaList = replicas
-      router1 = context.actorOf(RoundRobinGroup(replicas.map(_.path.toString())).props(), "router1")
+      router1 = context.actorOf(RoundRobinGroup(replicas.map(_.path.toString())).props())
+      if (!byzantineInit){
+        var i = 0
+        while (i < byzantineReplicas){
+          i+=1
+          router1 ! SetByzantine(chance)
+        }
+        byzantineInit = true;
+      }
     }
     case _ => println("recebeu mensagem diferente")
   }

@@ -35,16 +35,18 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     case Write(new_tag: Tag, v: Any, sig: String, nonce: Long, key: String) => {
       if (Encryption.verifySign(truststorePath, new_tag.toString().getBytes(),sig, false)){
         val logEntry = (System.currentTimeMillis(), key)
-        log += logEntry
         val tuple = map(key)
         if(tuple!=null){
           val tag = tuple._2
-          if(new_tag.sn > tag.sn)
+          if(new_tag.sn > tag.sn){
             map+=(key -> (v,new_tag,sig))
-          
+            log += logEntry
+          }
         }
-        else
+        else{
           map+=(key -> (v,new_tag,sig))
+          log += logEntry
+        }
         sendMessage(sender, Ack(nonce))
       }
     }
@@ -52,16 +54,19 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     case Write(new_tag: Tag, _, sig: String, nonce: Long, key: String) => {
       if(Encryption.verifySign(truststorePath, new_tag.toString().getBytes(),sig, false)){
         val logEntry = (System.currentTimeMillis(), key)
-        log += logEntry
         val tuple = map(key)
         if(tuple!=null){
           val tag = tuple._2
-          if(new_tag.sn > tag.sn)
+          if(new_tag.sn > tag.sn){
+            log += logEntry
             map+=(key -> null)
+          }
           
         }
-        else
+        else{
+          log += logEntry
           map+=(key -> null)
+        }
         sendMessage(sender, Ack(nonce))
       }
     }
@@ -103,6 +108,7 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
       list.foreach(o => map += (o._1 -> o._2))
     }
     case SetActiveReplica() => {
+      println(s"$self.path tornou-se replica")
       sentinent = false
     }
     case _ => println("replica recebeu mensagem diferente")
@@ -112,6 +118,8 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     if(byzantine){
         if(r.nextInt(100)>=chance)
           target ! message
+        else
+          println(s"$self.path : mensagem omitida")
     }
     else
       target ! message
