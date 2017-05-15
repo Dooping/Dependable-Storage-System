@@ -6,7 +6,7 @@ import Datatypes._
 import scala.concurrent.duration._
 import scala.util.Random
 
-class FaultDetection extends Actor{
+class FaultDetection(threshold: Int) extends Actor{
   
   class SyncReplica(replica: ActorRef) extends Runnable {
     def run = {
@@ -17,8 +17,6 @@ class FaultDetection extends Actor{
       }
     }
   }
-  
-  val threshold = 10
   
   var replicas = Set.empty[ActorRef]
   var sentinent = Set.empty[ActorRef]
@@ -47,6 +45,7 @@ class FaultDetection extends Actor{
       sender ! NewReplicaList(replicas.toList)
     }
     case Vote(replica) => {
+      println(sender.path + " voted for replica: " + replica.path)
       votes+=(replica -> (votes(replica)+1))
       if(votes(replica) >= threshold){
         replicas -= replica
