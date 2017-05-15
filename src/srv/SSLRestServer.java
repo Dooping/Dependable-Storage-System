@@ -41,6 +41,10 @@ public class SSLRestServer {
         nOp.setRequired(false);
         options.addOption(nOp);
         
+        Option tOp = new Option("th", "threshold", true, "number of votes to kick a replica");
+        tOp.setRequired(false);
+        options.addOption(tOp);
+        
         Option sOp = new Option("s", "sentinent", true, "number of sentinent replicas to spawn");
         sOp.setRequired(false);
         options.addOption(sOp);
@@ -81,6 +85,7 @@ public class SSLRestServer {
         
 		int n = Integer.parseInt(cmd.getOptionValue("number", "4"));
 		int s = Integer.parseInt(cmd.getOptionValue("sentinent", "0"));
+		int threshold = Integer.parseInt(cmd.getOptionValue("threshold", "10"));
 		String fault = cmd.getOptionValue("fault", "akka.ssl.tcp://FaultDetection@localhost:2563/user/faultDetection");
 		int crash = Integer.parseInt(cmd.getOptionValue("crash", "0"));
 		int chance = Integer.parseInt(cmd.getOptionValue("chance", "0"));
@@ -103,7 +108,7 @@ public class SSLRestServer {
 		case "fault":
 			ActorSystem faultDetection = ActorSystem.create("FaultDetection",ConfigFactory.load().getConfig("FaultDetection").withFallback(defaultCfg));
 			System.out.println("Fault Detection Server created...");
-			faultDetection.actorOf(Props.create(FaultDetection.class),"faultDetection");
+			faultDetection.actorOf(Props.create(FaultDetection.class, threshold),"faultDetection");
 			break;
 		case "proxy":
 			URI baseUri = UriBuilder.fromUri("http://0.0.0.0/").port(9090).build();
