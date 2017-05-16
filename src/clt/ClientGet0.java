@@ -99,8 +99,8 @@ public class ClientGet0 {
 		boolean run = true;
 		while(run){
 			System.out.println("[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
-					+ " ReadElem\n[7] isElem\n[8] Benchmark1\n[9] Benchmark2\n[10]"
-					+ " Benchmark3\n[11] Benchmark4\n[12] Benchmark5");
+					+ " ReadElem\n[7] isElem\n[8] Extensive API\n[9] Benchmark1\n[10] Benchmark2\n[11]"
+					+ " Benchmark3\n[12] Benchmark4\n[13] Benchmark5");
 	        String s = br.readLine();
 			switch(s){
 			case "0": run = false;
@@ -141,19 +141,73 @@ public class ClientGet0 {
 						.header("key","mykey").async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/iselem ; Response: " + iselem.get().readEntity(String.class));
 				break;
-			case "8"://Test #8 [BENCHMARK1]
+			case "8":
+				
+				boolean extensiveRun = true;
+				
+				while(extensiveRun){
+					System.out.println("[0] Go Back\n[1] Sum\n[2] SumAll\n[3] Mult\n[4] MultAll\n[5]"
+							+ " SearchEq\n[6] SearchNEq\n[7] SearchEntry\n[8] SearchEntryOR\n[9] SearchEntryAND\n[10]"
+							+ " OrderLS\n[11] OrderSL\n[12] SearchGt\n[13] SearchGtEq\n[14] SearchLt\n[15] SearchLtEq");
+					String w = br.readLine();
+					
+					switch(w){
+					
+					case "0":
+						extensiveRun =false;
+						break;
+					case "1":
+						Future<Response> sum = target.path("/server/sum").request().header("keyOne","mykey").header("keyTwo", "mykey").header("pos", "2").async().get();
+						System.out.println("Call: /server/sum ; Response: " + sum.get().readEntity(String.class));
+						break;
+					case "2":
+						break;
+					case "3":
+						break;
+					case "4":
+						break;
+					case "5":
+						break;
+					case "6":
+						break;
+					case "7":
+						break;
+					case "8":
+						break;
+					case "9":
+						break;
+					case "10":
+						break;
+					case "11":
+						break;
+					case "12":
+						break;
+					case "13":
+						break;
+					case "14":
+						break;
+					case "15":
+						break;
+					case "16":
+						break;
+					}
+					
+					
+				}
+				break;
+			case "9"://Test #8 [BENCHMARK1]
 				test.benchmark1();
 				break;
-			case "9"://Test #9 [BENCHMARK2]
+			case "10"://Test #9 [BENCHMARK2]
 				test.benchmark2();
 				break;
-			case "10"://Test #10 [BENCHMARK3]
+			case "11"://Test #10 [BENCHMARK3]
 				test.benchmark3();
 				break;
-			case "11"://Test #11 [BENCHMARK4]
+			case "12"://Test #11 [BENCHMARK4]
 				test.benchmark4();
 				break;
-			case "12"://Test #12 [BENCHMARK5]
+			case "13"://Test #12 [BENCHMARK5]
 				test.benchmark5();
 				break;
 			}

@@ -1,5 +1,7 @@
 package srv;
 
+import java.math.BigInteger;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -21,6 +23,8 @@ import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import auxiliary.EntryConfig;
+import hlib.hj.mlib.HomoAdd;
+import hlib.hj.mlib.PaillierKey;
 
 import org.glassfish.jersey.server.ManagedAsync;
 import scala.concurrent.Future;
@@ -286,15 +290,61 @@ public class ServerResource {
 	}
 	
 	
-	
-	
 		//=====EXTENSIVE API======
 		@GET
 		@Path("/sum")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response sum(@HeaderParam("pos") int pos,@HeaderParam("keyOne")String keyOne,@HeaderParam("keyTwo")String keyTwo, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void sum(@HeaderParam("pos") int pos,@HeaderParam("keyOne")String keyOne,@HeaderParam("keyTwo")String keyTwo, @Suspended final AsyncResponse asyncResponse){
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			Read read = new Read(System.nanoTime(),keyOne);
+			Future<Object> future = Patterns.ask(proxy, read, timeout);
+			future.onComplete(new OnComplete<Object>() {
+	            public void onComplete(Throwable failure, Object result) {
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		ReadResult res = (ReadResult)result;
+	            		Entry entry1 = res.v();
+	            		if(entry1 == null)
+	            			asyncResponse.resume(Response.status(Response.Status.NOT_FOUND).entity("Key not found: " + keyOne).build());
+	            		else if(pos>entry1.values.size())
+	            			asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity("Position not valid: " + pos).build());
+	            		else{
+	            			Read read2 = new Read(System.nanoTime(),keyTwo);
+	            			Future<Object> future2 = Patterns.ask(proxy, read2, timeout);
+		            		future2.onComplete(new OnComplete<Object>() {
+		
+		                        public void onComplete(Throwable failure, Object result) {
+		                        	if(failure != null){
+		                        		if(failure.getMessage() != null)
+		                        			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+		                        		else
+		                        			asyncResponse.resume(Response.serverError());
+		                        	}else{
+		                        		try{
+		                        		ReadResult res2 = (ReadResult)result;
+		        	            		Entry entry2 = res2.v();
+		        	            		BigInteger big1Code = (BigInteger) entry1.getElem(pos);
+		        	            		BigInteger big2Code = (BigInteger) entry2.getElem(pos); 
+		        	            		PaillierKey pk = (PaillierKey)conf.keys.get(pos).getKey(0);
+		        	            		BigInteger res = HomoAdd.sum(big1Code, big2Code, pk.getNsquare());
+		                        		asyncResponse.resume(Response.ok().entity(HomoAdd.decrypt(res, pk)).build());
+		                        		}catch(Exception e){
+		                        			e.printStackTrace();
+		                        		}
+		                        	}
+		                        }
+		                    }, actorSystem.dispatcher());
+	            		}
+	            		
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 
 		@GET
