@@ -41,7 +41,7 @@ public class EntryConfig {
 	private String filename;
 	private Object[] types;
 	private String[] ops;
-	private List<KeyStorage> keys;
+	public List<KeyStorage> keys;
 	
 	public EntryConfig(String filename){
 		this.filename = filename;
