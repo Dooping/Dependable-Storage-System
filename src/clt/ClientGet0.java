@@ -163,6 +163,8 @@ public class ClientGet0 {
 					case "2":
 						break;
 					case "3":
+						Future<Response> mult = target.path("/server/mult").request().header("keyOne","mykey").header("keyTwo", "mykey").header("pos", "4").async().get();
+						System.out.println("Call: /server/mult ; Response: " + mult.get().readEntity(String.class));
 						break;
 					case "4":
 						break;

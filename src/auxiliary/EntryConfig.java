@@ -42,9 +42,11 @@ public class EntryConfig {
 	private Object[] types;
 	private String[] ops;
 	public List<KeyStorage> keys;
+	private boolean keysStored;
 	
 	public EntryConfig(String filename){
 		this.filename = filename;
+		keysStored = false; // keys are stored only once ( the first entry inserted ) those keys are used for the rest of entries
 		file = new File(filename);
 		if(file.exists())
 			load();
@@ -76,68 +78,123 @@ public class EntryConfig {
 			switch(ops[i]){
 			
 				case EntryConfig.DETERMINISTIC_EQUAL:
-					SecretKey dkey = HomoDet.generateKey();
-					String encrypt = HomoDet.encrypt(dkey, auxString);
-					crypts.add(encrypt);
-					keys.get(i).addKey(dkey);
+					SecretKey dkey;
+					String encrypt;
+					if(keysStored){
+						dkey = (SecretKey)keys.get(i).getKey(0);
+						encrypt = HomoDet.encrypt(dkey, auxString);
+						crypts.add(encrypt);
+					}else{
+						dkey = HomoDet.generateKey();
+						encrypt = HomoDet.encrypt(dkey, auxString);
+						crypts.add(encrypt);
+						keys.get(i).addKey(dkey);
+					}
+					
 					System.out.println("[DETER_EQUAL]Encrypting: " + auxString);
 					System.out.println("[DETER_EQUAL]Encrypted: " + encrypt);
 					break;
 				case EntryConfig.DETERMINISTIC_EQUIV:break;
 				case EntryConfig.ORDER_LESS:
-					long key = HomoOpeInt.generateKey();
-					HomoOpeInt ope = new HomoOpeInt(key);
-					long res = ope.encrypt(auxInt);
+					long res;
+					if(keysStored){
+						long okey = (long)keys.get(i).getKey(0);
+						HomoOpeInt ope = new HomoOpeInt(okey);
+						res = ope.encrypt(auxInt);
+						crypts.add(res);
+					}else{
+						long key = HomoOpeInt.generateKey();
+						HomoOpeInt ope = new HomoOpeInt(key);
+						res = ope.encrypt(auxInt);
+						crypts.add(res);
+						keys.get(i).addKey(key);
+					}
 					System.out.println("[ORDER_LESS]Encrypting: " + auxInt);
 					System.out.println("[ORDER_LESS]Encrypted: " + res);
-					crypts.add(res);
-					keys.get(i).addKey(key);
 					break;
 				case EntryConfig.ORDER_GREAT:break;
 				case EntryConfig.ORDER_LESS_EQUAL:break;
 				case EntryConfig.ORDER_GREAT_EQUAL:break;
 				case EntryConfig.SEARCHABLE:
-					SecretKey skey = HomoSearch.generateKey();
-					String encrypted = HomoSearch.encrypt(skey, auxString);
+					String encrypted;
+					if(keysStored){
+						SecretKey skey = (SecretKey)keys.get(i).getKey(0); 
+						encrypted = HomoSearch.encrypt(skey, auxString);
+						crypts.add(encrypted);
+					}else{
+						SecretKey skey = HomoSearch.generateKey();
+						encrypted = HomoSearch.encrypt(skey, auxString);
+						crypts.add(encrypted);
+						keys.get(i).addKey(skey);
+					}
 					System.out.println("[SEARCHABLE]Encrypting: " + auxString);
 					System.out.println("[SEARCHABLE]Encrypted: " + encrypted);
-					crypts.add(encrypted);
-					keys.get(i).addKey(skey);
+					
 					break;
 				case EntryConfig.PAILIER:
 					try{
-						PaillierKey pk = HomoAdd.generateKey();
-						BigInteger big = new BigInteger(Integer.toString(auxInt));
-						BigInteger bigcrypt = HomoAdd.encrypt(big, pk);
+						
+						BigInteger big;
+						BigInteger bigcrypt;
+						if(keysStored){
+							PaillierKey pkey = (PaillierKey)keys.get(i).getKey(0); 
+							big = new BigInteger(Integer.toString(auxInt));
+							bigcrypt = HomoAdd.encrypt(big, pkey);
+							crypts.add(bigcrypt);
+						}else{
+							PaillierKey pk = HomoAdd.generateKey();
+							big = new BigInteger(Integer.toString(auxInt));
+							bigcrypt = HomoAdd.encrypt(big, pk);
+							crypts.add(bigcrypt);
+							keys.get(i).addKey(pk);
+						}
 						System.out.println("[PAILLIER]Encrypting: " + big.toString());
 						System.out.println("[PAILLIER]Encrypted: " + bigcrypt.toString());
-						crypts.add(bigcrypt);
-						keys.get(i).addKey(pk);
+					
 					}catch(Exception e){
 						e.printStackTrace();
 					}
 					break;
 				case EntryConfig.RSA:
-					KeyPair keyPair = HomoMult.generateKey();
-					RSAPublicKey rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
-					RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) keyPair.getPrivate();
-					BigInteger bigOne = new BigInteger(Integer.toString(auxInt));
-					BigInteger bigCode = HomoMult.encrypt(rsaPublicKey,bigOne);
-					crypts.add(bigCode);
-					keys.get(i).addKey(rsaPrivateKey);
+					BigInteger bigOne;
+					BigInteger bigCode;
+					if(keysStored){
+						RSAPublicKey rsaPublicKey = (RSAPublicKey)keys.get(i).getKey(0);
+						RSAPrivateKey rsaPrivateKey = (RSAPrivateKey)keys.get(i).getKey(1); // not needed for now
+						bigOne = new BigInteger(Integer.toString(auxInt));
+						bigCode = HomoMult.encrypt(rsaPublicKey,bigOne);
+						crypts.add(bigCode);
+					}else{
+						KeyPair keyPair = HomoMult.generateKey();
+						RSAPublicKey rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
+						RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) keyPair.getPrivate();
+						bigOne = new BigInteger(Integer.toString(auxInt));
+						bigCode = HomoMult.encrypt(rsaPublicKey,bigOne);
+						crypts.add(bigCode);
+						keys.get(i).addKey(rsaPublicKey);
+						keys.get(i).addKey(rsaPrivateKey);
+					}
 					System.out.println("[RSA]Encrypting: " + bigOne.toString());
 					System.out.println("[RSA]Encrypted: " + bigCode.toString());
 					break;
 				case EntryConfig.RAND:
 					try{
-						SecretKey randKey = HomoRand.generateKey();
-						byte[] iv = HomoRand.generateIV();
-						byte[] randEncrypt = HomoRand.encrypt(randKey, iv, auxString.getBytes("UTF-8"));
+						byte[] randEncrypt;
+						if(keysStored){
+							SecretKey randKey = (SecretKey) keys.get(i).getKey(0);
+							byte[] iv = (byte[])keys.get(i).getKey(1);
+							randEncrypt = HomoRand.encrypt(randKey, iv, auxString.getBytes("UTF-8"));
+							crypts.add(randEncrypt);
+						}else{
+							SecretKey randKey = HomoRand.generateKey();
+							byte[] iv = HomoRand.generateIV();
+							randEncrypt = HomoRand.encrypt(randKey, iv, auxString.getBytes("UTF-8"));
+							crypts.add(randEncrypt);
+							keys.get(i).addKey(randKey);
+							keys.get(i).addKey(iv);
+						}
 						System.out.println("[RAND]Encrypting: " + auxString);
 						System.out.println("[RAND]Encrypted: " + randEncrypt);
-						crypts.add(randEncrypt);
-						keys.get(i).addKey(randKey);
-						keys.get(i).addKey(iv);
 					}catch(Exception e){
 						e.printStackTrace();
 					}
@@ -146,7 +203,7 @@ public class EntryConfig {
 			}
 			
 		}
-		
+		keysStored = true;
 		return new Entry(crypts.get(0),crypts.get(1),crypts.get(2),crypts.get(3),crypts.get(4),crypts.get(5));
 		
 }
@@ -205,7 +262,8 @@ public class EntryConfig {
 				}
 				break;
 			case EntryConfig.RSA:
-				RSAPrivateKey privKey = (RSAPrivateKey)keys.get(i).getKey(0);
+				RSAPublicKey pubKey = (RSAPublicKey)keys.get(i).getKey(0); //not needed for now
+				RSAPrivateKey privKey = (RSAPrivateKey)keys.get(i).getKey(1);
 				BigInteger cryptRSAVal = (BigInteger) encryptedEntry.getElem(i);
 				BigInteger trueRSAVal = HomoMult.decrypt(privKey, cryptRSAVal);
 				vals.add(trueRSAVal);
