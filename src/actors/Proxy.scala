@@ -149,11 +149,13 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
     case NewReplicaList(replicas) => {
       replicaList = replicas
       router1 = context.actorOf(RoundRobinGroup(replicas.map(_.path.toString())).props())
-      if (!byzantineInit){
+      if (!byzantineInit && byzantineReplicas < replicas.size){
+        val byz = replicas.toList
+        Random.shuffle(byz)
         var i = 0
         while (i < byzantineReplicas){
+          byz(i) ! SetByzantine(chance)
           i+=1
-          router1 ! SetByzantine(chance)
         }
         byzantineInit = true;
       }
