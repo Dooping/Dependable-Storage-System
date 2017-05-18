@@ -21,6 +21,16 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
     }
   }
   
+  class SumQuorumTimeout(quorum: Set[Any], replicas: List[ActorRef]) extends Runnable {
+    def run = {
+      val maxQuorum = quorum.groupBy(_.asInstanceOf[(ActorRef, SumAllResult)]._2.res).mapValues(_.size).maxBy(_._2)
+      val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, SumAllResult)]._1 == r && p.asInstanceOf[(ActorRef, SumAllResult)]._2.res.compareTo(maxQuorum._1)==0))
+      errors.foreach(e => faultServer ! Vote(e))
+      if(errors.size>0)
+        println("Failure candidates: "+errors)
+    }
+  }
+  
   val r = Random
   var replicasCrashed = 0
   val requests = HashMap.empty[Long, Request]
@@ -36,11 +46,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
   
   def receive = {
     case Read(nonce: Long, key: String) => {
-      if (replicasCrashed<replicasToCrash)
-        if(r.nextInt(100)<chance){
-          router1 ! CrashReplica
-          replicasCrashed+=1
-        }
+      crashChance
       val request = new Request(sender, "ReadStep1",null)
       context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
       requests+=(nonce -> request)
@@ -113,11 +119,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
         }
     }
     case APIWrite(nonce: Long, key: String, id: String, v: Entry) => {
-      if (replicasCrashed<replicasToCrash)
-        if(r.nextInt(100)<chance){
-          router1 ! CrashReplica
-          replicasCrashed+=1
-        }
+      crashChance
       val request = new Request(sender,"WriteStep1", id)
       request.max = APIWrite(nonce, key, id, v)
       context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
@@ -125,11 +127,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       router1 ! Broadcast(ReadTag(nonce, key))
     }
     case APIWrite(nonce: Long, key: String, id: String, _) => {
-      if (replicasCrashed<replicasToCrash)
-        if(r.nextInt(100)<chance){
-          router1 ! CrashReplica
-          replicasCrashed+=1
-        }
+      crashChance
       val request = new Request(sender,"WriteStep1", id)
       request.max = APIWrite(nonce, key, id, null)
       context.system.scheduler.scheduleOnce(2 seconds, new QuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
@@ -160,6 +158,33 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
         byzantineInit = true;
       }
     }
+    case SumAll(nonce, pos, encrypted, nsquare) => {
+      crashChance
+      val request = new Request(sender,"SumAll", sender.path.toString())
+      request.max = SumAll(nonce, pos, encrypted, nsquare)
+      context.system.scheduler.scheduleOnce(2 seconds, new SumQuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+
+    }
+    case SumAllResult(nonce, res) => {
+      //juntar falhas byzantinas com valores errados?
+      val request = requests(nonce)
+      val tuple = (sender, SumAllResult(nonce, res))
+      request.quorum += tuple
+      val maxQuorum = request.quorum.groupBy(_.asInstanceOf[(ActorRef, SumAllResult)]._2.res).mapValues(_.size).maxBy(_._2)
+      if (maxQuorum._2.compareTo(minQuorum)==0)
+        request.sender ! SumAllResult(nonce, maxQuorum._1)
+    }
     case _ => println("recebeu mensagem diferente")
+  }
+  
+  
+  def crashChance = {
+    if (replicasCrashed<replicasToCrash)
+        if(r.nextInt(100)<chance){
+          router1 ! CrashReplica
+          replicasCrashed+=1
+        }
   }
 }

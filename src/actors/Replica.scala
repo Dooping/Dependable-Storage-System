@@ -5,6 +5,8 @@ import Datatypes._
 import scala.collection.mutable.{HashMap, MutableList}
 import security.Encryption
 import scala.util.Random
+import java.math.BigInteger
+import hlib.hj.mlib._
 
 class Replica(active: Boolean, faultServerAddress: String) extends Actor{
   var byzantine = false
@@ -110,6 +112,28 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     case SetActiveReplica() => {
       println(s"$self.path tornou-se replica")
       sentinent = false
+    }
+    case SumAll(nonce, pos, encrypted, nsquare) => {
+      val entries = map.toIterator
+      val size = map.size
+      if(size == 0) sender ! SumAllResult(nonce, BigInteger.ZERO)
+      var first = entries.next()
+      if(size == 1) sender ! SumAllResult(nonce, first._2._1.getElem(pos).asInstanceOf[BigInteger])
+      var second = entries.next()
+      var res = BigInteger.ZERO
+      if(encrypted)
+        res = HomoAdd.sum(first._2._1.getElem(pos).asInstanceOf[BigInteger], second._2._1.getElem(pos).asInstanceOf[BigInteger], nsquare)
+      else
+        res = first._2._1.getElem(pos).asInstanceOf[BigInteger].add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
+      while(entries.hasNext){
+        second = entries.next()
+        if(encrypted)
+          res = HomoAdd.sum(res, second._2._1.getElem(pos).asInstanceOf[BigInteger], nsquare)
+        else
+          res.add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
+      }
+      sender ! SumAllResult(nonce, res)
+      
     }
     case _ => println("replica recebeu mensagem diferente")
   }
