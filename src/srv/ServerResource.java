@@ -43,9 +43,19 @@ public class ServerResource {
 	String value = "default";
 	Entry dummyEntry = new Entry(1,"two",3,"four",5,"six");
 	EntryConfig conf;
+	private boolean activeEncryption;
 	
 	public ServerResource(){
 		conf = new EntryConfig(EntryConfig.CONF_FILE);
+		activeEncryption = true; //set as true for testing
+	}
+	
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@ManagedAsync
+	public void get(@Suspended final AsyncResponse asyncResponse){
+		System.out.println("Responding with:"+ conf.getConfigString());
+		asyncResponse.resume(Response.ok().entity(conf.getConfigString()).build());
 	}
 	
 	@POST
@@ -352,8 +362,35 @@ public class ServerResource {
 		@Path("/sumall")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response sumAll(@HeaderParam("pos")int pos, @Suspended final AsyncResponse asyncResponse){	
-			return Response.ok().build();
+		public void sumAll(@HeaderParam("pos")int pos, @Suspended final AsyncResponse asyncResponse){	
+			
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			PaillierKey pkey = (PaillierKey) conf.keys.get(pos).getKey(0);
+			SumAll sum = new SumAll(System.nanoTime(),pos,activeEncryption,pkey.getNsquare());
+			Future<Object> future = Patterns.ask(proxy, sum, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		SumMultAllResult res = (SumMultAllResult) result;
+	                	if(res.res()!=null){
+	                		BigInteger big = res.res();
+	                		BigInteger truePaiVal = HomoAdd.decrypt(big, pkey);
+	                		asyncResponse.resume(Response.ok().entity(truePaiVal.toString()).build());
+	                	}
+	                	else
+	                		asyncResponse.resume(Response.ok().entity(false).build());
+	            	
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@GET

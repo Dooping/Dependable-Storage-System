@@ -42,17 +42,22 @@ public class EntryConfig {
 	private Object[] types;
 	private String[] ops;
 	public List<KeyStorage> keys;
+	public String configString;
 	private boolean keysStored;
 	
 	public EntryConfig(String filename){
 		this.filename = filename;
 		keysStored = false; // keys are stored only once ( the first entry inserted ) those keys are used for the rest of entries
 		file = new File(filename);
+		configString = "";
 		if(file.exists())
 			load();
 		keys = new ArrayList<KeyStorage>(); //stores the keys in order to decrypt
 		initKeyStorage();
-		
+	}
+
+	public String getConfigString(){
+		return configString;
 	}
 	
 	private void initKeyStorage(){
@@ -90,7 +95,6 @@ public class EntryConfig {
 						crypts.add(encrypt);
 						keys.get(i).addKey(dkey);
 					}
-					
 					System.out.println("[DETER_EQUAL]Encrypting: " + auxString);
 					System.out.println("[DETER_EQUAL]Encrypted: " + encrypt);
 					break;
@@ -292,8 +296,8 @@ public class EntryConfig {
 			br = new BufferedReader(fr);
 			
 			//Read the Entry type structure
-			String line = br.readLine();
-			String[] typesAux = line.split(" ");
+			String line1 = br.readLine();
+			String[] typesAux = line1.split(" ");
 			types = new Object[typesAux.length];
 			for(int i = 0 ; i < typesAux.length ; i++){
 				if(typesAux[i].equalsIgnoreCase("int"))
@@ -303,8 +307,11 @@ public class EntryConfig {
 			}
 			
 			//Read the ops allowed on each column/values
-			line = br.readLine();
-			ops = line.split(" ");
+			String line2 = br.readLine();
+			ops = line2.split(" ");
+			
+			configString = configString + line1 + "\n" + line2;
+			System.out.println("loaded:"+configString);
 			
 		}catch(Exception e){
 			e.printStackTrace();

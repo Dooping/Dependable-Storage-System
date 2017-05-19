@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -95,10 +96,14 @@ public class ClientGet0 {
 
 		Benchmarks test = new Benchmarks(target); // for the benchmarks
 		
+		Future<Response> fut = target.path("/server")
+				.request().async().get();
+		String configString = fut.get().readEntity(String.class);
+		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
+			System.out.println("Valid Entry:"+configString.replace("\n", " ")+"\n[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
 					+ " ReadElem\n[7] isElem\n[8] Extensive API\n[9] Benchmark1\n[10] Benchmark2\n[11]"
 					+ " Benchmark3\n[12] Benchmark4\n[13] Benchmark5");
 	        String s = br.readLine();
@@ -106,8 +111,11 @@ public class ClientGet0 {
 			case "0": run = false;
 					break;
 			case "1"://Test #1 [PUTSET]
+				System.out.println("[key]");
+				String res = br.readLine();
+				String[] parts = res.split(" ");
 				Future<Response> key = target.path("/server/putset")
-						.request().header("key", "mykey").async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+						.request().header("key", parts[0]).async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/putset ; Response: "+ key.get().readEntity(Long.class));
 				break;
 			case "2"://Test #2 [GETSET]
@@ -161,6 +169,8 @@ public class ClientGet0 {
 						System.out.println("Call: /server/sum ; Response: " + sum.get().readEntity(String.class));
 						break;
 					case "2":
+						Future<Response> sumall = target.path("/server/sumall").request().header("pos", "2").async().get();
+						System.out.println("Call: /server/sumall ; Response: " + sumall.get().readEntity(BigInteger.class));
 						break;
 					case "3":
 						Future<Response> mult = target.path("/server/mult").request().header("keyOne","mykey").header("keyTwo", "mykey").header("pos", "4").async().get();
