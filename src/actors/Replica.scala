@@ -116,9 +116,9 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     case SumAll(nonce, pos, encrypted, nsquare) => {
       val entries = map.toIterator
       val size = map.size
-      if(size == 0) sender ! SumAllResult(nonce, BigInteger.ZERO)
+      if(size == 0) sendMessage(sender,SumMultAllResult(nonce, BigInteger.ZERO))
       var first = entries.next()
-      if(size == 1) sender ! SumAllResult(nonce, first._2._1.getElem(pos).asInstanceOf[BigInteger])
+      if(size == 1) sendMessage(sender,SumMultAllResult(nonce, first._2._1.getElem(pos).asInstanceOf[BigInteger]))
       var second = entries.next()
       var res = BigInteger.ZERO
       if(encrypted)
@@ -132,7 +132,29 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
         else
           res.add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
       }
-      sender ! SumAllResult(nonce, res)
+      sendMessage(sender,SumMultAllResult(nonce, res))
+      
+    }
+    case MultAll(nonce, pos, encrypted, key) => {
+      val entries = map.toIterator
+      val size = map.size
+      if(size == 0) sendMessage(sender,SumMultAllResult(nonce, BigInteger.ZERO))
+      var first = entries.next()
+      if(size == 1) sendMessage(sender,SumMultAllResult(nonce, first._2._1.getElem(pos).asInstanceOf[BigInteger]))
+      var second = entries.next()
+      var res = BigInteger.ZERO
+      if(encrypted)
+        res = HomoMult.multiply(first._2._1.getElem(pos).asInstanceOf[BigInteger], second._2._1.getElem(pos).asInstanceOf[BigInteger], key)
+      else
+        res = first._2._1.getElem(pos).asInstanceOf[BigInteger].add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
+      while(entries.hasNext){
+        second = entries.next()
+        if(encrypted)
+          res = HomoMult.multiply(res, second._2._1.getElem(pos).asInstanceOf[BigInteger], key)
+        else
+          res.add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
+      }
+      sendMessage(sender,SumMultAllResult(nonce, res))
       
     }
     case _ => println("replica recebeu mensagem diferente")

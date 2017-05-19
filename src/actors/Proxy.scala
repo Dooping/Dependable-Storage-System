@@ -21,10 +21,10 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
     }
   }
   
-  class SumQuorumTimeout(quorum: Set[Any], replicas: List[ActorRef]) extends Runnable {
+  class SumMultQuorumTimeout(quorum: Set[Any], replicas: List[ActorRef]) extends Runnable {
     def run = {
-      val maxQuorum = quorum.groupBy(_.asInstanceOf[(ActorRef, SumAllResult)]._2.res).mapValues(_.size).maxBy(_._2)
-      val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, SumAllResult)]._1 == r && p.asInstanceOf[(ActorRef, SumAllResult)]._2.res.compareTo(maxQuorum._1)==0))
+      val maxQuorum = quorum.groupBy(_.asInstanceOf[(ActorRef, SumMultAllResult)]._2.res).mapValues(_.size).maxBy(_._2)
+      val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, SumMultAllResult)]._1 == r && p.asInstanceOf[(ActorRef, SumMultAllResult)]._2.res.compareTo(maxQuorum._1)==0))
       errors.foreach(e => faultServer ! Vote(e))
       if(errors.size>0)
         println("Failure candidates: "+errors)
@@ -162,19 +162,27 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       crashChance
       val request = new Request(sender,"SumAll", sender.path.toString())
       request.max = SumAll(nonce, pos, encrypted, nsquare)
-      context.system.scheduler.scheduleOnce(2 seconds, new SumQuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
+      context.system.scheduler.scheduleOnce(2 seconds, new SumMultQuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
 
     }
-    case SumAllResult(nonce, res) => {
-      //juntar falhas byzantinas com valores errados?
+    case SumMultAllResult(nonce, res) => {
       val request = requests(nonce)
-      val tuple = (sender, SumAllResult(nonce, res))
+      val tuple = (sender, SumMultAllResult(nonce, res))
       request.quorum += tuple
-      val maxQuorum = request.quorum.groupBy(_.asInstanceOf[(ActorRef, SumAllResult)]._2.res).mapValues(_.size).maxBy(_._2)
+      val maxQuorum = request.quorum.groupBy(_.asInstanceOf[(ActorRef, SumMultAllResult)]._2.res).mapValues(_.size).maxBy(_._2)
       if (maxQuorum._2.compareTo(minQuorum)==0)
-        request.sender ! SumAllResult(nonce, maxQuorum._1)
+        request.sender ! SumMultAllResult(nonce, maxQuorum._1)
+    }
+    case MultAll(nonce, pos, encrypted, key) => {
+      crashChance
+      val request = new Request(sender,"SumAll", sender.path.toString())
+      request.max = MultAll(nonce, pos, encrypted, key)
+      context.system.scheduler.scheduleOnce(2 seconds, new SumMultQuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+
     }
     case _ => println("recebeu mensagem diferente")
   }
