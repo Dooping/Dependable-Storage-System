@@ -98,12 +98,12 @@ public class ClientGet0 {
 		
 		Future<Response> fut = target.path("/server")
 				.request().async().get();
-		String configString = fut.get().readEntity(String.class);
+		String configString = fut.get().readEntity(String.class).replace("\n", ") Allowed Ops: ");
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("Valid Entry:"+configString.replace("\n", " ")+"\n[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
+			System.out.println("Valid Entry: ("+configString+"\n[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
 					+ " ReadElem\n[7] isElem\n[8] Extensive API\n[9] Benchmark1\n[10] Benchmark2\n[11]"
 					+ " Benchmark3\n[12] Benchmark4\n[13] Benchmark5");
 	        String s = br.readLine();

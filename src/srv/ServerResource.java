@@ -54,7 +54,6 @@ public class ServerResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@ManagedAsync
 	public void get(@Suspended final AsyncResponse asyncResponse){
-		System.out.println("Responding with:"+ conf.getConfigString());
 		asyncResponse.resume(Response.ok().entity(conf.getConfigString()).build());
 	}
 	
