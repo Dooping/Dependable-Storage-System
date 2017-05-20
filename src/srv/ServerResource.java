@@ -211,7 +211,7 @@ public class ServerResource {
             			asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity("Position not valid: " + pos).build());
             		else{
 	            		entry.values.remove(pos);
-	            		entry.values.add(pos,obj);
+	            		entry.values.add(pos,conf.encryptElem(pos, obj));
 	            		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",entry);
 	            		Future<Object> future = Patterns.ask(proxy, write, timeout);
 	            		future.onComplete(new OnComplete<Object>() {
@@ -257,7 +257,7 @@ public class ServerResource {
             	}else{
             		ReadResult res = (ReadResult)result;
             		if(res.v()!=null)
-            			asyncResponse.resume(Response.ok().entity(res.v().getElem(pos)).build());
+            			asyncResponse.resume(Response.ok().entity(conf.decryptElem(pos, res.v().getElem(pos))).build());
             		else
             			asyncResponse.resume(Response.status(Response.Status.NOT_FOUND).entity("Key not found: " + key).build());
             	}
