@@ -31,6 +31,10 @@ public class Entry implements Serializable{
 		return values.get(pos);
 	}
 	
+	public void addCustomElem(Object val){
+		values.add(val);
+	}
+	
 	public void addElem(){
 		values.add(null);
 	}

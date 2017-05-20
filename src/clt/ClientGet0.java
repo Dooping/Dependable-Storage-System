@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -95,10 +96,27 @@ public class ClientGet0 {
 
 		Benchmarks test = new Benchmarks(target); // for the benchmarks
 		
+		//the server will return the entry configuration so the client can insert entries
+		Future<Response> fut = target.path("/server")
+				.request().async().get();
+		String configString = fut.get().readEntity(String.class);
+		
+		//process the Entry configuration returned from the server
+		String split[] = configString.split("\n"); //int string int string int string/\n& $ # " !
+		String types[] = split[0].split(" "); //int string int string int string
+		Object allowedTypes[] = new Object[types.length];
+		for(int i = 0 ; i < types.length ; i++){
+			if(types[i].equalsIgnoreCase("int"))
+				allowedTypes[i] = new Integer(0);
+			else
+				allowedTypes[i] = new String();
+		}
+		
+		configString = configString.replace("\n", ") Allowed Ops: ");
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
+			System.out.println("Valid Entry: ("+configString+"\n[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
 					+ " ReadElem\n[7] isElem\n[8] Extensive API\n[9] Benchmark1\n[10] Benchmark2\n[11]"
 					+ " Benchmark3\n[12] Benchmark4\n[13] Benchmark5");
 	        String s = br.readLine();
@@ -106,32 +124,61 @@ public class ClientGet0 {
 			case "0": run = false;
 					break;
 			case "1"://Test #1 [PUTSET]
+				System.out.println("[key] [entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
+				String res = br.readLine();
+				String[] parts = res.split(" ");
+				Entry n = new Entry();
+				for(int i = 1; i < parts.length; i++){
+					if(allowedTypes[i-1] instanceof Integer)//since i starts at 1, use i-1 to go get the first index of allowedTypes
+						n.addCustomElem(Integer.parseInt(parts[i])); 
+					else
+						n.addCustomElem(parts[i]); 
+				}
+				
 				Future<Response> key = target.path("/server/putset")
-						.request().header("key", "mykey").async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+						.request().header("key", parts[0]).async().post(Entity.entity(n, MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/putset ; Response: "+ key.get().readEntity(Long.class));
 				break;
 			case "2"://Test #2 [GETSET]
-				Future<Response> set = target.path("/server/getset").request().header("key", "mykey").async().get();
+				System.out.println("[key]");
+				String key2 = br.readLine();
+				Future<Response> set = target.path("/server/getset").request().header("key",key2).async().get();
 				System.out.println("Call: /server/getset ; Response: "+ set.get().readEntity(Entry.class));
 				break;
 			case "3"://test #3 [ADDELEM]
+				System.out.println("[key]");
+				String key3 = br.readLine();
 				Future<Response> addelem = target.path("/server/addelem").request()
-					.header("key", "mykey").async().post(Entity.entity("", MediaType.APPLICATION_JSON));
+					.header("key", key3).async().post(Entity.entity("", MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/addelem ; Response: "+addelem.get().readEntity(Long.class));
 				break;
 			case "4"://test #4 [REMOVESET]
-				Future<Response> delete = target.path("/server/removeset").request().header("key", "mykey").async().delete();
+				System.out.println("[key]");
+				String key4 = br.readLine();
+				Future<Response> delete = target.path("/server/removeset").request().header("key", key4).async().delete();
 				System.out.println("Call: /server/removeset ; Response: "+delete.get().readEntity(Long.class));
 				break;
 			case "5"://test #5 [WRITEELEM]
+				System.out.println("[key] [pos] [new val]");
+				String res5 = br.readLine();
+				String parts5[] = res5.split(" ");
+				int pos = Integer.parseInt(parts5[1]);
 				JSONObject jsonobj = new JSONObject();
-				jsonobj.append("element", 2);
+				if(allowedTypes[pos] instanceof String){
+					jsonobj.append("element", parts5[2]);
+				}else{
+					jsonobj.append("element",Integer.parseInt(parts5[2]));
+				}
 				Future<Response> val = target.path("/server/writeelem").request()
-						.header("key", "mykey").header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));
+						.header("key", parts5[0]).header("pos", pos).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));
 				System.out.println(val.toString());
 				break;
 			case "6"://Test #6 [READELEM]
-				Future<Response> elem = target.path("/server/readelem").request().header("key","mykey").header("pos", "1").async().get();
+				System.out.println("[key] [pos]");
+				String res6 = br.readLine();
+				String parts6[] = res6.split(" ");
+				int pos6 = Integer.parseInt(parts6[1]);
+				Future<Response> elem = target.path("/server/readelem").request().header("key",parts6[0]).header("pos", pos6).async().get();
 				System.out.println("Call: /server/readelem ; Response: " + elem.get().readEntity(String.class));
 				break;
 			case "7"://Test #7 [ISELEM]
@@ -161,6 +208,8 @@ public class ClientGet0 {
 						System.out.println("Call: /server/sum ; Response: " + sum.get().readEntity(String.class));
 						break;
 					case "2":
+						Future<Response> sumall = target.path("/server/sumall").request().header("pos", "2").async().get();
+						System.out.println("Call: /server/sumall ; Response: " + sumall.get().readEntity(BigInteger.class));
 						break;
 					case "3":
 						Future<Response> mult = target.path("/server/mult").request().header("keyOne","mykey").header("keyTwo", "mykey").header("pos", "4").async().get();
