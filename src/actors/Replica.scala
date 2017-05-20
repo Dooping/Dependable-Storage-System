@@ -133,7 +133,6 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
           res.add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
       }
       sendMessage(sender,SumMultAllResult(nonce, res))
-      
     }
     case MultAll(nonce, pos, encrypted, key) => {
       val entries = map.toIterator
@@ -155,7 +154,22 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
           res.add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
       }
       sendMessage(sender,SumMultAllResult(nonce, res))
-      
+    }
+    case SearchEq(nonce, pos, value, encrypted, key) => {
+      var set = map
+      if(encrypted)
+        set = map.filter(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
+      else
+        set = map.filter(e => e._2._1.getElem(pos).asInstanceOf[String].equals(value))
+      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toList))
+    }
+    case SearchNEq(nonce, pos, value, encrypted, key) => {
+      var set = map
+      if(encrypted)
+        set = map.filterNot(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
+      else
+        set = map.filterNot(e => e._2._1.getElem(pos).asInstanceOf[String].equals(value))
+      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toList))
     }
     case _ => println("replica recebeu mensagem diferente")
   }
