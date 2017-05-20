@@ -157,11 +157,11 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     }
     case SearchEq(nonce, pos, value) => {
       var set = map.filter(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
-      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toList))
+      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer))
     }
     case SearchNEq(nonce, pos, value) => {
       var set = map.filterNot(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
-      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toList))
+      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer))
     }
     case _ => println("replica recebeu mensagem diferente")
   }

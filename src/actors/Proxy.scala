@@ -2,7 +2,7 @@ package actors
 
 import akka.actor.{Actor, ActorRef, Props, ActorPath}
 import Datatypes._
-import scala.collection.mutable.{Set, HashMap}
+import scala.collection.mutable.{Set, HashMap, Buffer}
 import scala.collection.immutable.List
 import security.Encryption
 import akka.routing.{Broadcast, FromConfig, RoundRobinGroup}
@@ -215,7 +215,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       val request = requests(nonce)
       request.ackQuorum += tuple
       if (request.ackQuorum.size==minQuorum){
-        var message = EntrySet(nonce, request.quorum.groupBy(_.asInstanceOf[(ActorRef,List[Entry])]._2).mapValues(_.size).maxBy(_._2)._1)
+        var message = EntrySet(nonce, request.quorum.groupBy(_.asInstanceOf[(ActorRef,Buffer[Entry])]._2).mapValues(_.size).maxBy(_._2)._1)
         request.sender ! message
       }
     }
