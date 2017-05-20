@@ -180,7 +180,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       val request = requests(nonce)
       val tuple = (sender, SumMultAllResult(nonce, res))
       request.quorum += tuple
-      if (request.quorum==minQuorum){
+      if (request.quorum.size==minQuorum){
         val maxQuorum = request.quorum.groupBy(_.asInstanceOf[(ActorRef, SumMultAllResult)]._2.res).mapValues(_.size).maxBy(_._2)
         request.sender ! SumMultAllResult(nonce, maxQuorum._1)
       }
