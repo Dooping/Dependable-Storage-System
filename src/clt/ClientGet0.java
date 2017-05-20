@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.net.ssl.HostnameVerifier;
@@ -20,6 +21,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -209,15 +211,24 @@ public class ClientGet0 {
 						break;
 					case "2":
 						Future<Response> sumall = target.path("/server/sumall").request().header("pos", "2").async().get();
-						System.out.println("Call: /server/sumall ; Response: " + sumall.get().readEntity(BigInteger.class));
+						System.out.println("Call: /server/sumall ; Response: " + sumall.get().readEntity(String.class));
 						break;
 					case "3":
 						Future<Response> mult = target.path("/server/mult").request().header("keyOne","mykey").header("keyTwo", "mykey").header("pos", "4").async().get();
 						System.out.println("Call: /server/mult ; Response: " + mult.get().readEntity(String.class));
 						break;
 					case "4":
+						Future<Response> multall = target.path("/server/multall").request().header("pos", "4").async().get();
+						System.out.println("Call: /server/multall ; Response: " + multall.get().readEntity(String.class));
 						break;
 					case "5":
+						JSONObject jsobj = new JSONObject();
+						jsobj.append("element", "four");
+						Future<Response> seq = target.path("/server/searcheq").request().header("pos", "3").async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlist;
+						seqlist = seq.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlist)
+							System.out.println("Call: /server/searcheq ; Response: " + seqentry.toString());
 						break;
 					case "6":
 						break;

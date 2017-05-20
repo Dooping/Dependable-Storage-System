@@ -3,6 +3,7 @@ package srv;
 import java.math.BigInteger;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -30,6 +31,9 @@ import hlib.hj.mlib.HomoMult;
 import hlib.hj.mlib.PaillierKey;
 
 import org.glassfish.jersey.server.ManagedAsync;
+
+
+import scala.collection.mutable.Buffer;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
@@ -453,16 +457,77 @@ public class ServerResource {
 		@Path("/multall")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response multAll(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void multAll(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			RSAPublicKey rsapubkey = (RSAPublicKey)conf.keys.get(pos).getKey(0);
+			MultAll mult = new MultAll(System.nanoTime(),pos,activeEncryption,rsapubkey);
+			Future<Object> future = Patterns.ask(proxy, mult, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		System.out.println("FAILURE");
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		SumMultAllResult res = (SumMultAllResult) result;
+	            		System.out.println("REES:"+res);
+	                	
+	                		BigInteger big = res.res();
+	                		RSAPrivateKey rsaprivKey =(RSAPrivateKey) conf.keys.get(pos).getKey(1);
+	                		BigInteger trueRSAVal = HomoMult.decrypt(rsaprivKey, big);
+	                		System.out.println("[MULTALL]:"+trueRSAVal.toString());
+	                		asyncResponse.resume(Response.ok().entity(trueRSAVal.toString()).build());
+	                	
+	                	
+	                		//asyncResponse.resume(Response.ok().entity(false).build());
+	            	
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@POST
 		@Path("/searcheq")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response searchEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void searchEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			//return Response.ok().build();
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			String val =(String) jdata.get(0);
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchEq seq = new SearchEq(System.nanoTime(), pos,val);
+			Future<Object> future = Patterns.ask(proxy, seq, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		EntrySet res = (EntrySet) result;
+	            		List<Entry> seqlist =(List<Entry>) res.set();
+	            		for(Entry n : seqlist){
+	            			System.out.println("HEEERE**"+n.toString());
+	            		}
+	                	if(res.set()!= null){
+	                		asyncResponse.resume(Response.ok().entity(seqlist).build());
+	                	}
+	                	else
+	                		asyncResponse.resume(Response.ok().entity(false).build());
+	            	
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@POST
