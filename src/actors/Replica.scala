@@ -155,20 +155,12 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
       }
       sendMessage(sender,SumMultAllResult(nonce, res))
     }
-    case SearchEq(nonce, pos, value, encrypted, key) => {
-      var set = map
-      if(encrypted)
-        set = map.filter(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
-      else
-        set = map.filter(e => e._2._1.getElem(pos).asInstanceOf[String].equals(value))
+    case SearchEq(nonce, pos, value) => {
+      var set = map.filter(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toList))
     }
-    case SearchNEq(nonce, pos, value, encrypted, key) => {
-      var set = map
-      if(encrypted)
-        set = map.filterNot(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
-      else
-        set = map.filterNot(e => e._2._1.getElem(pos).asInstanceOf[String].equals(value))
+    case SearchNEq(nonce, pos, value) => {
+      var set = map.filterNot(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toList))
     }
     case _ => println("replica recebeu mensagem diferente")
