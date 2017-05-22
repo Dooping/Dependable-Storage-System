@@ -183,16 +183,16 @@ public class EntryConfig {
 					break;
 				case EntryConfig.RAND:
 					try{
-						byte[] randEncrypt;
+						String randEncrypt;
 						if(keysStored){
 							SecretKey randKey = (SecretKey) keys.get(i).getKey(0);
 							byte[] iv = (byte[])keys.get(i).getKey(1);
-							randEncrypt = HomoRand.encrypt(randKey, iv, auxString.getBytes("UTF-8"));
+							randEncrypt = HomoRand.encrypt(randKey, iv, auxString);
 							crypts.add(randEncrypt);
 						}else{
 							SecretKey randKey = HomoRand.generateKey();
 							byte[] iv = HomoRand.generateIV();
-							randEncrypt = HomoRand.encrypt(randKey, iv, auxString.getBytes("UTF-8"));
+							randEncrypt = HomoRand.encrypt(randKey, iv, auxString);
 							crypts.add(randEncrypt);
 							keys.get(i).addKey(randKey);
 							keys.get(i).addKey(iv);
