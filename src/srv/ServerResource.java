@@ -502,7 +502,7 @@ public class ServerResource {
 			String val =(String) jdata.get(0);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchEq seq = new SearchEq(System.nanoTime(), pos,val);
+			SearchEq seq = new SearchEq(System.nanoTime(), pos,(String)conf.encryptElem(pos, val));
 			Future<Object> future = Patterns.ask(proxy, seq, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
