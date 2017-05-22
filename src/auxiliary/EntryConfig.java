@@ -277,8 +277,7 @@ public class EntryConfig {
 				//for Random, we need to store 2 keys
 				SecretKey randKey = (SecretKey) keys.get(i).getKey(0);
 				byte[] iv = (byte[])keys.get(i).getKey(1);
-				byte[] cryptRandVal = (byte[]) encryptedEntry.getElem(i);
-				String message = new String(HomoRand.decrypt(randKey, iv, cryptRandVal));
+				String message = HomoRand.decrypt(randKey, iv, (String)encryptedEntry.getElem(i));
 				vals.add(message);
 				System.out.println("[RAND]Decrypted: "+ message);
 				break;
@@ -345,8 +344,7 @@ public class EntryConfig {
 				//for Random, we need to store 2 keys
 				SecretKey randKey = (SecretKey) keys.get(pos).getKey(0);
 				byte[] iv = (byte[])keys.get(pos).getKey(1);
-				byte[] cryptRandVal = (byte[]) elem;
-				String message = new String(HomoRand.decrypt(randKey, iv, cryptRandVal));
+				String message = HomoRand.decrypt(randKey, iv, (String)elem);
 				System.out.println("[RAND]Decrypted: "+ message);
 				return message;
 			}
@@ -420,10 +418,10 @@ public class EntryConfig {
 				return bigCode;
 			case EntryConfig.RAND:
 				try{
-					byte[] randEncrypt;
+					String randEncrypt;
 					SecretKey randKey = (SecretKey) keys.get(pos).getKey(0);
 					byte[] iv = (byte[])keys.get(pos).getKey(1);
-					randEncrypt = HomoRand.encrypt(randKey, iv, auxString.getBytes("UTF-8"));
+					randEncrypt = HomoRand.encrypt(randKey, iv, auxString);
 					System.out.println("[RAND]Encrypting: " + auxString);
 					System.out.println("[RAND]Encrypted: " + randEncrypt);
 					return randEncrypt;
