@@ -9,6 +9,7 @@ import akka.routing.{Broadcast, FromConfig, RoundRobinGroup}
 import scala.util.Random
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
+import scala.collection.JavaConverters._
 
 class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum: Int, faultServerAddress: String) extends Actor {
   
@@ -34,9 +35,11 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
   
   class SetQuorumTimeout(quorum: Set[Any], replicas: List[ActorRef]) extends Runnable {
     def run = {
-      val maxQuorum = quorum.groupBy(_.asInstanceOf[(ActorRef,List[Entry])]._2).mapValues(_.size).maxBy(_._2)
-      println(maxQuorum)
-      //teste
+      val maxQuorum = quorum.groupBy(_.asInstanceOf[(ActorRef,java.util.List[Entry])]._2).mapValues(_.size).maxBy(_._2)
+      val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, java.util.List[Entry])]._1 == r && p.asInstanceOf[(ActorRef, java.util.List[Entry])]._2.equals(maxQuorum._1)))
+      errors.foreach(e => faultServer ! Vote(e))
+      if(errors.size>0)
+        println("Failure candidates: "+errors)
     }
   }
   
@@ -198,7 +201,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       crashChance
       val request = new Request(sender,"SearchEq", sender.path.toString())
       request.max = SearchEq(nonce, pos, value)
-      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
     }
@@ -206,17 +209,18 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       crashChance
       val request = new Request(sender,"SearchNEq", sender.path.toString())
       request.max = SearchNEq(nonce, pos, value)
-      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.quorum, replicaList.toList))(context.system.dispatcher)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
     }
     case EntrySet(nonce, set) => {
       val tuple = (sender, set)
       val request = requests(nonce)
+      //println(tuple)
       request.ackQuorum += tuple
       if (request.ackQuorum.size==minQuorum){
-        var message = EntrySet(nonce, request.quorum.groupBy(_.asInstanceOf[(ActorRef,Buffer[Entry])]._2).mapValues(_.size).maxBy(_._2)._1)
-        request.sender ! message
+        var message = request.ackQuorum.groupBy(_.asInstanceOf[(ActorRef,java.util.List[Entry])]._2).mapValues(_.size).maxBy(_._2)._1
+        request.sender ! EntrySet(nonce, message)
       }
     }
     case _ => println("recebeu mensagem diferente")

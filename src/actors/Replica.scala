@@ -7,6 +7,7 @@ import security.Encryption
 import scala.util.Random
 import java.math.BigInteger
 import hlib.hj.mlib._
+import scala.collection.JavaConverters._
 
 class Replica(active: Boolean, faultServerAddress: String) extends Actor{
   var byzantine = false
@@ -106,7 +107,7 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     }
     case SyncResult(list) => {
       if (!list.isEmpty)
-        println("tuplos atualizados: "+ list.map(_._2).toList)
+        println("tuplos atualizados: "+ list)
       list.foreach(o => map += (o._1 -> o._2))
     }
     case SetActiveReplica() => {
@@ -157,11 +158,11 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     }
     case SearchEq(nonce, pos, value) => {
       var set = map.filter(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
-      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer))
+      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
     }
     case SearchNEq(nonce, pos, value) => {
       var set = map.filterNot(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
-      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer))
+      sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
     }
     case _ => println("replica recebeu mensagem diferente")
   }

@@ -33,7 +33,6 @@ import hlib.hj.mlib.PaillierKey;
 import org.glassfish.jersey.server.ManagedAsync;
 
 
-import scala.collection.mutable.Buffer;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
@@ -515,7 +514,7 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
-	            		List<Entry> seqlist =(List<Entry>) res.set();
+	            		List<Entry> seqlist = res.set();
 	            		for(Entry n : seqlist){
 	            			System.out.println("HEEERE**"+n.toString());
 	            		}
