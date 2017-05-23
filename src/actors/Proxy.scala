@@ -39,7 +39,6 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       val sizes = Buffer.empty[Any]
       distinct.foreach(e => sizes += ((e,quorum.count(_.asInstanceOf[(ActorRef, java.util.List[Entry])]._2 == e))))
       val maxQuorum = sizes.maxBy(_.asInstanceOf[(java.util.List[Entry],Int)]._2)
-      //print(maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._2)
       val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, java.util.List[Entry])]._1 == r && p.asInstanceOf[(ActorRef, java.util.List[Entry])]._2.equals(maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._1)))
       errors.foreach(e => faultServer ! Vote(e))
       if(errors.size>0)
@@ -217,6 +216,30 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
     }
+    case SearchEntry(nonce, value) => {
+      crashChance
+      val request = new Request(sender,"SearchEntry", sender.path.toString())
+      request.max = SearchEntry(nonce, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case SearchEntryOr(nonce, value) => {
+      crashChance
+      val request = new Request(sender,"SearchEntryOr", sender.path.toString())
+      request.max = SearchEntryOr(nonce, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case SearchEntryAnd(nonce, value) => {
+      crashChance
+      val request = new Request(sender,"SearchEntryAnd", sender.path.toString())
+      request.max = SearchEntryAnd(nonce, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
     case EntrySet(nonce, set) => {
       val tuple = (sender, set)
       val request = requests(nonce)
@@ -226,7 +249,6 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
         val sizes = Buffer.empty[Any]
         distinct.foreach(e => sizes += ((e,request.ackQuorum.count(_.asInstanceOf[(ActorRef, java.util.List[Entry])]._2 == e))))
         val maxQuorum = sizes.maxBy(_.asInstanceOf[(java.util.List[Entry],Int)]._2)
-        //var message = request.ackQuorum.groupBy(_.asInstanceOf[(ActorRef,java.util.List[Entry])]._2).mapValues(_.size).maxBy(_._2)._1
         request.sender ! EntrySet(nonce, maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._1)
       }
     }

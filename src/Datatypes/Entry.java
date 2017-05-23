@@ -3,6 +3,7 @@ package Datatypes;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import hlib.hj.mlib.HomoSearch;
 
 public class Entry implements Serializable{
 
@@ -25,6 +26,10 @@ public class Entry implements Serializable{
 		values = new ArrayList<Object>();
 		for(Object o : valueList)
 			values.add(o);
+	}
+	
+	public int size(){
+		return values.size();
 	}
 	
 	public Object getElem(int pos){
@@ -57,6 +62,14 @@ public class Entry implements Serializable{
 			}
 		//System.out.println(values+":"+otherEntry.values);
 		return true;
+	}
+	
+	public boolean search(Entry other){
+		for(int i = 0; i < values.size() && i< other.size(); i++)
+			if(values.get(i) != null)
+				if(HomoSearch.searchAll((String)values.get(i), (String)other.getElem(i)))
+					return true;
+		return false;
 	}
 
 }
