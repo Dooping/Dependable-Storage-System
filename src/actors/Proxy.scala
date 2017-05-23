@@ -39,7 +39,7 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       val sizes = Buffer.empty[Any]
       distinct.foreach(e => sizes += ((e,quorum.count(_.asInstanceOf[(ActorRef, java.util.List[Entry])]._2 == e))))
       val maxQuorum = sizes.maxBy(_.asInstanceOf[(java.util.List[Entry],Int)]._2)
-      print(maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._2)
+      //print(maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._2)
       val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, java.util.List[Entry])]._1 == r && p.asInstanceOf[(ActorRef, java.util.List[Entry])]._2.equals(maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._1)))
       errors.foreach(e => faultServer ! Vote(e))
       if(errors.size>0)
