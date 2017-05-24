@@ -8,6 +8,7 @@ import scala.util.Random
 import java.math.BigInteger
 import hlib.hj.mlib._
 import scala.collection.JavaConverters._
+import scala.collection.immutable.ListMap
 
 class Replica(active: Boolean, faultServerAddress: String) extends Actor{
   var byzantine = false
@@ -175,6 +176,14 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
     case SearchEntryAnd(nonce, value) => {
       var set = map.filter(e => value.asScala.forall(p=>p.search(e._2._1)))
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
+    }
+    case OrderLS(nonce, pos) => {
+      var set = map.map(_._2._1).toBuffer.sortWith((e,r) => HomoOpeInt.compare(e.getElem(pos).asInstanceOf[Long],r.getElem(pos).asInstanceOf[Long]))
+      sendMessage(sender,EntrySet(nonce, set.asJava))
+    }
+    case OrderSL(nonce, pos) => {
+      var set = map.map(_._2._1).toBuffer.sortWith((r,e) => HomoOpeInt.compare(e.getElem(pos).asInstanceOf[Long],r.getElem(pos).asInstanceOf[Long]))
+      sendMessage(sender,EntrySet(nonce, set.asJava))
     }
     case _ => println("replica recebeu mensagem diferente")
   }
