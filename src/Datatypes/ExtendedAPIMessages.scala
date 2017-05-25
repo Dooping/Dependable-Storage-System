@@ -19,3 +19,8 @@ case class SearchEntryAnd(nonce: Long, value: java.util.List[Entry])
 
 case class OrderLS (nonce: Long, pos: Int)
 case class OrderSL (nonce: Long, pos: Int)
+case class SearchEqInt (nonce: Long, pos: Int, value: Long)
+case class SearchGt (nonce: Long, pos: Int, value: Long)
+case class SearchGtEq (nonce: Long, pos: Int, value: Long)
+case class SearchLt (nonce: Long, pos: Int, value: Long)
+case class SearchLtEq (nonce: Long, pos: Int, value: Long)

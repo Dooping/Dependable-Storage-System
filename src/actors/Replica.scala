@@ -178,11 +178,31 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
     }
     case OrderLS(nonce, pos) => {
-      var set = map.map(_._2._1).toBuffer.sortWith((e,r) => HomoOpeInt.compare(e.getElem(pos).asInstanceOf[Long],r.getElem(pos).asInstanceOf[Long]))
+      var set = map.map(_._2._1).toBuffer.sortWith((e,r) => e.getElem(pos).asInstanceOf[Long]<r.getElem(pos).asInstanceOf[Long])
       sendMessage(sender,EntrySet(nonce, set.asJava))
     }
     case OrderSL(nonce, pos) => {
-      var set = map.map(_._2._1).toBuffer.sortWith((r,e) => HomoOpeInt.compare(e.getElem(pos).asInstanceOf[Long],r.getElem(pos).asInstanceOf[Long]))
+      var set = map.map(_._2._1).toBuffer.sortWith((e,r) => e.getElem(pos).asInstanceOf[Long]>r.getElem(pos).asInstanceOf[Long])
+      sendMessage(sender,EntrySet(nonce, set.asJava))
+    }
+    case SearchEqInt (nonce, pos, value) => {
+      var set = map.map(_._2._1).filter(_.getElem(pos).asInstanceOf[Long]==value).toBuffer
+      sendMessage(sender,EntrySet(nonce, set.asJava))
+    }
+    case SearchGt (nonce, pos, value) => {
+      var set = map.map(_._2._1).filter(_.getElem(pos).asInstanceOf[Long]>value).toBuffer
+      sendMessage(sender,EntrySet(nonce, set.asJava))
+    }
+    case SearchGtEq (nonce, pos, value) => {
+      var set = map.map(_._2._1).filter(_.getElem(pos).asInstanceOf[Long]>=value).toBuffer
+      sendMessage(sender,EntrySet(nonce, set.asJava))
+    }
+    case SearchLt (nonce, pos, value) => {
+      var set = map.map(_._2._1).filter(_.getElem(pos).asInstanceOf[Long]<value).toBuffer
+      sendMessage(sender,EntrySet(nonce, set.asJava))
+    }
+    case SearchLtEq (nonce, pos, value) => {
+      var set = map.map(_._2._1).filter(_.getElem(pos).asInstanceOf[Long]<=value).toBuffer
       sendMessage(sender,EntrySet(nonce, set.asJava))
     }
     case _ => println("replica recebeu mensagem diferente")
