@@ -240,6 +240,62 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
     }
+    case OrderLS(nonce, pos) => {
+      crashChance
+      val request = new Request(sender,"OrderLS", sender.path.toString())
+      request.max = OrderLS(nonce, pos)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case OrderSL(nonce, pos) => {
+      crashChance
+      val request = new Request(sender,"OrderSL", sender.path.toString())
+      request.max = OrderSL(nonce, pos)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case SearchEqInt(nonce, pos, value) => {
+      crashChance
+      val request = new Request(sender,"SearchEqInt", sender.path.toString())
+      request.max = SearchEqInt(nonce, pos, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case SearchGt(nonce, pos, value) => {
+      crashChance
+      val request = new Request(sender,"SearchGt", sender.path.toString())
+      request.max = SearchGt(nonce, pos, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case SearchGtEq(nonce, pos, value) => {
+      crashChance
+      val request = new Request(sender,"SearchGtEq", sender.path.toString())
+      request.max = SearchGtEq(nonce, pos, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case SearchLt(nonce, pos, value) => {
+      crashChance
+      val request = new Request(sender,"SearchLt", sender.path.toString())
+      request.max = SearchLt(nonce, pos, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
+    case SearchLtEq(nonce, pos, value) => {
+      crashChance
+      val request = new Request(sender,"SearchLtEq", sender.path.toString())
+      request.max = SearchLtEq(nonce, pos, value)
+      context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
+      requests+=(nonce -> request)
+      router1 ! Broadcast(request.max)
+    }
     case EntrySet(nonce, set) => {
       val tuple = (sender, set)
       val request = requests(nonce)
