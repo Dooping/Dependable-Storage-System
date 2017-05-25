@@ -231,6 +231,13 @@ public class ClientGet0 {
 							System.out.println("Call: /server/searcheq ; Response: " + seqentry.toString());
 						break;
 					case "6":
+						JSONObject jsobj2 = new JSONObject();
+						jsobj2.append("element", "ya");
+						Future<Response> neq = target.path("/server/searchneq").request().header("pos", "3").async().post(Entity.entity(jsobj2.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlist2;
+						seqlist2 = neq.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlist2)
+							System.out.println("Call: /server/searchneq ; Response: " + seqentry.toString());
 						break;
 					case "7":
 						break;

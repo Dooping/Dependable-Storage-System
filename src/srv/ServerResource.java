@@ -3,6 +3,7 @@ package srv;
 import java.math.BigInteger;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -20,7 +21,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import Datatypes.*;
+import auxiliary.*;
 import akka.actor.ActorSelection;
+//import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
@@ -515,11 +518,12 @@ public class ServerResource {
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
 	            		List<Entry> seqlist = res.set();
+	            		List<Entry> decryptedEntries = new ArrayList<Entry>();
 	            		for(Entry n : seqlist){
-	            			System.out.println("HEEERE**"+n.toString());
+	            			decryptedEntries.add(conf.decryptEntry(n));
 	            		}
 	                	if(res.set()!= null){
-	                		asyncResponse.resume(Response.ok().entity(seqlist).build());
+	                		asyncResponse.resume(Response.ok().entity(decryptedEntries).build());
 	                	}
 	                	else
 	                		asyncResponse.resume(Response.ok().entity(false).build());
@@ -533,13 +537,54 @@ public class ServerResource {
 		@Path("/searchneq")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response searchNEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void searchNEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			//return Response.ok().build();
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			String val =(String) jdata.get(0);
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchNEq seq = new SearchNEq(System.nanoTime(), pos,(String)conf.encryptElem(pos, val));
+			Future<Object> future = Patterns.ask(proxy, seq, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		EntrySet res = (EntrySet) result;
+	            		List<Entry> seqlist = res.set();
+	            		List<Entry> decryptedEntries = new ArrayList<Entry>();
+	            		for(Entry n : seqlist){
+	            			decryptedEntries.add(conf.decryptEntry(n));
+	            		}
+	                	if(res.set()!= null){
+	                		asyncResponse.resume(Response.ok().entity(decryptedEntries).build());
+	                	}
+	                	else
+	                		asyncResponse.resume(Response.ok().entity(false).build());
+	            	
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@POST
-		@Path("/searchentryor")
+		@Path("/searchentry")
 		@Produces(MediaType.APPLICATION_JSON)
+		public Response searchEntry(Entry entry, @Suspended final AsyncResponse asyncResponse){
+			return Response.ok().build();
+		}
+		
+		
+		@POST
+		@Path("/searchentry")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
 		public Response searchEntryOR(String json, @Suspended final AsyncResponse asyncResponse){
 			return Response.ok().build();
 		}
