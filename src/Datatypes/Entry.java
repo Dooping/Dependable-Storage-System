@@ -64,11 +64,16 @@ public class Entry implements Serializable{
 		return true;
 	}
 	
-	public boolean search(Entry other){
+	public boolean search(Entry other, boolean encrypted){
 		for(int i = 0; i < values.size() && i< other.size(); i++)
 			if(values.get(i) != null)
-				if(HomoSearch.searchAll((String)values.get(i), (String)other.getElem(i)))
-					return true;
+				if(encrypted){
+					if(HomoSearch.searchAll((String)values.get(i), (String)other.getElem(i)))
+						return true;
+				}
+				else
+					if(((String)values.get(i)).contains((String)other.getElem(i)))
+						return true;
 		return false;
 	}
 

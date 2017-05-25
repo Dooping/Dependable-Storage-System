@@ -216,26 +216,26 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
     }
-    case SearchEntry(nonce, value) => {
+    case SearchEntry(nonce, value, encrypted) => {
       crashChance
       val request = new Request(sender,"SearchEntry", sender.path.toString())
-      request.max = SearchEntry(nonce, value)
+      request.max = SearchEntry(nonce, value, encrypted)
       context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
     }
-    case SearchEntryOr(nonce, value) => {
+    case SearchEntryOr(nonce, value, encrypted) => {
       crashChance
       val request = new Request(sender,"SearchEntryOr", sender.path.toString())
-      request.max = SearchEntryOr(nonce, value)
+      request.max = SearchEntryOr(nonce, value, encrypted)
       context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)
     }
-    case SearchEntryAnd(nonce, value) => {
+    case SearchEntryAnd(nonce, value, encrypted) => {
       crashChance
       val request = new Request(sender,"SearchEntryAnd", sender.path.toString())
-      request.max = SearchEntryAnd(nonce, value)
+      request.max = SearchEntryAnd(nonce, value, encrypted)
       context.system.scheduler.scheduleOnce(2 seconds, new SetQuorumTimeout(request.ackQuorum, replicaList.toList))(context.system.dispatcher)
       requests+=(nonce -> request)
       router1 ! Broadcast(request.max)

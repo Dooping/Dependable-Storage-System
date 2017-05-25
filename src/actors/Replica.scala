@@ -165,16 +165,16 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
       var set = map.filterNot(e => HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value))
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
     }
-    case SearchEntry(nonce, value) => {
-      var set = map.filter(e => value.search(e._2._1))
+    case SearchEntry(nonce, value, encrypted) => {
+      var set = map.filter(e => value.search(e._2._1, encrypted))
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
     }
-    case SearchEntryOr(nonce, value) => {
-      var set = map.filter(e => value.asScala.exists(p=>p.search(e._2._1)))
+    case SearchEntryOr(nonce, value, encrypted) => {
+      var set = map.filter(e => value.asScala.exists(p=>p.search(e._2._1, encrypted)))
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
     }
-    case SearchEntryAnd(nonce, value) => {
-      var set = map.filter(e => value.asScala.forall(p=>p.search(e._2._1)))
+    case SearchEntryAnd(nonce, value, encrypted) => {
+      var set = map.filter(e => value.asScala.forall(p=>p.search(e._2._1, encrypted)))
       sendMessage(sender,EntrySet(nonce, set.map(_._2._1).toBuffer.asJava))
     }
     case OrderLS(nonce, pos) => {
