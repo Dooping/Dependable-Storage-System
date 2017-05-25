@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -224,24 +225,57 @@ public class ClientGet0 {
 					case "5":
 						JSONObject jsobj = new JSONObject();
 						jsobj.append("element", "four");
-						Future<Response> seq = target.path("/server/searcheq").request().header("pos", "3").async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlist;
-						seqlist = seq.get().readEntity(new GenericType<List<Entry>>(){});
+						Future<Response> searceq = target.path("/server/searcheq").request().header("pos", "3").async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlist = searceq.get().readEntity(new GenericType<List<Entry>>(){});
 						for(Entry seqentry : seqlist)
 							System.out.println("Call: /server/searcheq ; Response: " + seqentry.toString());
 						break;
 					case "6":
 						JSONObject jsobj2 = new JSONObject();
 						jsobj2.append("element", "ya");
-						Future<Response> neq = target.path("/server/searchneq").request().header("pos", "3").async().post(Entity.entity(jsobj2.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlist2;
-						seqlist2 = neq.get().readEntity(new GenericType<List<Entry>>(){});
+						Future<Response> searchneq = target.path("/server/searchneq").request().header("pos", "3").async().post(Entity.entity(jsobj2.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlist2 = searchneq.get().readEntity(new GenericType<List<Entry>>(){});
 						for(Entry seqentry : seqlist2)
 							System.out.println("Call: /server/searchneq ; Response: " + seqentry.toString());
 						break;
 					case "7":
+						System.out.println("[entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
+						String res7 = br.readLine();
+						String[] parts7 = res7.split(" ");
+						Entry n7 = new Entry();
+						for(int i = 0; i < parts7.length; i++){
+							if(allowedTypes[i] instanceof Integer)
+								n7.addCustomElem(null); 
+							else
+								n7.addCustomElem(parts7[i]);
+						}
+						Future<Response> searchentry = target.path("/server/searchentry").request().async().post(Entity.entity(n7,MediaType.APPLICATION_JSON));
+						List<Entry> seqlist3 = searchentry.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlist3)
+							System.out.println("Call: /server/searchentry ; Response: " + seqentry.toString());
+						
 						break;
 					case "8":
+						System.out.println("[number of entries]");
+						int nrEntries = Integer.parseInt(br.readLine());
+						List<Entry> entries = new ArrayList<Entry>();
+						for(int i = 0; i < nrEntries; i++){
+							Entry entryOR = new Entry();
+							System.out.println("(Entry "+ (i+1) +"/"+nrEntries+ ") [entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
+							String entryLine = br.readLine();
+							String[] entryParts = entryLine.split(" ");
+							for(int j = 0 ; j < entryParts.length ; j ++){
+								if(allowedTypes[j] instanceof Integer)
+									entryOR.addCustomElem(Integer.parseInt(entryParts[j])); 
+								else
+									entryOR.addCustomElem(entryParts[j]);
+							}
+							entries.add(entryOR);
+						}
+						Future<Response> searchentryor = target.path("/server/searchentryor").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+						List<Entry> seqlist4 = searchentryor.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlist4)
+							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
 						break;
 					case "9":
 						break;

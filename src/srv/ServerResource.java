@@ -485,9 +485,6 @@ public class ServerResource {
 	                		System.out.println("[MULTALL]:"+trueRSAVal.toString());
 	                		asyncResponse.resume(Response.ok().entity(trueRSAVal.toString()).build());
 	                	
-	                	
-	                		//asyncResponse.resume(Response.ok().entity(false).build());
-	            	
 	            	}
 	            }
 	        }, actorSystem.dispatcher());
@@ -576,17 +573,111 @@ public class ServerResource {
 		@POST
 		@Path("/searchentry")
 		@Produces(MediaType.APPLICATION_JSON)
-		public Response searchEntry(Entry entry, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		@ManagedAsync
+		public void searchEntry(Entry entry, @Suspended final AsyncResponse asyncResponse){
+			Entry specialEntry = new Entry();
+			System.out.println("[SEARCHENTRY] " + entry.toString());
+			boolean[] searchables = conf.getOpIndex("%");
+			
+			List<Object> values = entry.values;
+			for(int i = 0 ; i < values.size() ; i ++){
+				if(values.get(i)!=null && searchables[i]){ //se for diferente de null e for um campo de % (search)
+					if(activeEncryption)
+						specialEntry.addCustomElem(conf.encryptElem(i, values.get(i)));
+					else
+						specialEntry.addCustomElem(values.get(i));
+				}else{
+					specialEntry.addCustomElem(null);
+				}
+			}
+			
+				
+			System.out.println("[SEARCHENTRY] " + entry.toString());
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+			SearchEntry sent = new SearchEntry(System.nanoTime(),specialEntry,activeEncryption);
+			Future<Object> future = Patterns.ask(proxy, sent, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		EntrySet res = (EntrySet) result;
+	            		List<Entry> seqlist = res.set();
+	            		System.out.println("[SEARCHENTRY] " + res.toString());
+	            		List<Entry> decryptedEntries = new ArrayList<Entry>();
+	            		for(Entry n : seqlist){
+	            			decryptedEntries.add(conf.decryptEntry(n));
+	            		}
+	                	if(res.set()!= null){
+	                		asyncResponse.resume(Response.ok().entity(decryptedEntries).build());
+	                	}
+	                	else
+	                		asyncResponse.resume(Response.ok().entity(false).build());
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		
 		@POST
-		@Path("/searchentry")
+		@Path("/searchentryor")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response searchEntryOR(String json, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void searchEntryOR(List<Entry> entries, @Suspended final AsyncResponse asyncResponse){
+			List<Entry> auxEntries = new ArrayList<Entry>();
+			boolean[] searchables = conf.getOpIndex("%");
+			System.out.println(searchables);
+			System.out.println(entries.size());
+			for(int i = 0 ; i < entries.size() ; i++){
+				Entry n = entries.get(i);
+				Entry specialEntry = new Entry();
+				List<Object> values = n.values;
+				for(int j = 0 ; j < values.size() ; j ++){
+					if(values.get(j)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
+						System.out.println("[SEARCHENTRYOR] Searchable:" + i );
+						if(activeEncryption)
+							specialEntry.addCustomElem(conf.encryptElem(j, values.get(j)));
+						else
+							specialEntry.addCustomElem(values.get(j));
+					}else{
+						specialEntry.addCustomElem(null);
+					}
+				}
+				auxEntries.add(specialEntry);
+			}
+			
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchEntryOr sent = new SearchEntryOr(System.nanoTime(),auxEntries,activeEncryption);
+			Future<Object> future = Patterns.ask(proxy, sent, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		EntrySet res = (EntrySet) result;
+	            		List<Entry> seqlist = res.set();
+	            		List<Entry> decryptedEntries = new ArrayList<Entry>();
+	            		for(Entry n : seqlist)
+	            			decryptedEntries.add(conf.decryptEntry(n));
+	                	if(res.set()!= null){
+	                		asyncResponse.resume(Response.ok().entity(decryptedEntries).build());
+	                	}
+	                	else
+	                		asyncResponse.resume(Response.ok().entity(false).build());
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
+		
 		}
 		
 		@POST

@@ -290,7 +290,7 @@ public class EntryConfig {
 	
 	public Object decryptElem(int pos, Object elem){
 		
-		System.out.println("=====[DECRYPTING]=====");
+		System.out.println("=====[DECRYPTING ELEMENT]=====");
 		System.out.println("Encripted Elem:");
 		System.out.println(elem);
 		System.out.println("Keys to Decript:");
@@ -355,6 +355,8 @@ public class EntryConfig {
 		
 		if(!keysStored)
 			return null;
+		
+		System.out.println("=====[ENCRYPTING ELEMENT]=====");
 		
 		int auxInt = 0;
 		String auxString = "";
@@ -469,5 +471,14 @@ public class EntryConfig {
 	
 	public String[] getOps(){
 		return ops;
+	}
+	
+	public boolean[] getOpIndex(String code){
+		boolean[] indexs = new boolean[ops.length];
+		for(int i = 0 ; i < ops.length ; i++){
+			if(ops[i].equalsIgnoreCase(code))
+				indexs[i] = true;
+		}
+		return indexs;
 	}
 }
