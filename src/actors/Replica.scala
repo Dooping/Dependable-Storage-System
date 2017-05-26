@@ -213,7 +213,24 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
         if(r.nextInt(100)>=chance)
           target ! message
         else
-          println(s"$self.path : mensagem omitida")
+          message match{
+            case EntrySet(_, set) => {
+              if (set.size()>0) {
+                val number = r.nextInt(set.size())
+                for(i <- 0 until number)
+                  set.remove(r.nextInt(set.size()))
+              }
+              else {
+                val number = r.nextInt(10)
+                for(i <- 0 until number)
+                  set.add(new Entry())
+              }
+              target ! message
+            }
+            case SumMultAllResult(nonce, number) => target ! SumMultAllResult(nonce, BigInteger.valueOf(r.nextLong()))
+            case _ => println(s"$self.path : mensagem omitida")
+        }
+          
     }
     else
       target ! message
