@@ -185,10 +185,13 @@ public class ClientGet0 {
 				System.out.println("Call: /server/readelem ; Response: " + elem.get().readEntity(String.class));
 				break;
 			case "7"://Test #7 [ISELEM]
+				System.out.println("[key] [val]");
+				String resIselem = br.readLine();
+				String partsIselem[] = resIselem.split(" ");
 				JSONObject json = new JSONObject();
-				json.append("element", "two");
+				json.append("element", partsIselem[1]);
 				Future<Response> iselem = target.path("/server/iselem").request()
-						.header("key","mykey").async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
+						.header("key",partsIselem[0]).async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/iselem ; Response: " + iselem.get().readEntity(String.class));
 				break;
 			case "8":
@@ -196,7 +199,7 @@ public class ClientGet0 {
 				boolean extensiveRun = true;
 				
 				while(extensiveRun){
-					System.out.println("[0] Go Back\n[1] Sum\n[2] SumAll\n[3] Mult\n[4] MultAll\n[5]"
+					System.out.println("Valid Entry: ("+configString+"\n[0] Go Back\n[1] Sum\n[2] SumAll\n[3] Mult\n[4] MultAll\n[5]"
 							+ " SearchEq\n[6] SearchNEq\n[7] SearchEntry\n[8] SearchEntryOR\n[9] SearchEntryAND\n[10]"
 							+ " OrderLS\n[11] OrderSL\n[12] SearchGt\n[13] SearchGtEq\n[14] SearchLt\n[15] SearchLtEq");
 					String w = br.readLine();
@@ -207,33 +210,53 @@ public class ClientGet0 {
 						extensiveRun =false;
 						break;
 					case "1":
-						Future<Response> sum = target.path("/server/sum").request().header("keyOne","mykey").header("keyTwo", "mykey").header("pos", "2").async().get();
+						System.out.println("[key1] [key2] [pos]");
+						String resSum = br.readLine();
+						String partsSum[] = resSum.split(" ");
+						int posSum = Integer.parseInt(partsSum[2]);
+						Future<Response> sum = target.path("/server/sum").request().header("keyOne",partsSum[0]).header("keyTwo", partsSum[1]).header("pos", posSum).async().get();
 						System.out.println("Call: /server/sum ; Response: " + sum.get().readEntity(String.class));
 						break;
 					case "2":
-						Future<Response> sumall = target.path("/server/sumall").request().header("pos", "2").async().get();
+						System.out.println("[pos]");
+						int posSumall = Integer.parseInt(br.readLine());
+						Future<Response> sumall = target.path("/server/sumall").request().header("pos", posSumall).async().get();
 						System.out.println("Call: /server/sumall ; Response: " + sumall.get().readEntity(String.class));
 						break;
 					case "3":
-						Future<Response> mult = target.path("/server/mult").request().header("keyOne","mykey").header("keyTwo", "mykey").header("pos", "4").async().get();
+						System.out.println("[key1] [key2] [pos]");
+						String resMult = br.readLine();
+						String partsMult[] = resMult.split(" ");
+						int posMult = Integer.parseInt(partsMult[2]);
+						Future<Response> mult = target.path("/server/mult").request().header("keyOne",partsMult[0]).header("keyTwo", partsMult[1]).header("pos", posMult).async().get();
 						System.out.println("Call: /server/mult ; Response: " + mult.get().readEntity(String.class));
 						break;
 					case "4":
-						Future<Response> multall = target.path("/server/multall").request().header("pos", "4").async().get();
+						System.out.println("[pos]");
+						int posMultall = Integer.parseInt(br.readLine());
+						Future<Response> multall = target.path("/server/multall").request().header("pos", posMultall).async().get();
 						System.out.println("Call: /server/multall ; Response: " + multall.get().readEntity(String.class));
 						break;
 					case "5":
+						System.out.println("[pos] [val]");
+						String resSearcheq = br.readLine();
+						String partsSearcheq[] = resSearcheq.split(" ");
+						int posSearcheq = Integer.parseInt(partsSearcheq[0]);
 						JSONObject jsobj = new JSONObject();
-						jsobj.append("element", "four");
-						Future<Response> searceq = target.path("/server/searcheq").request().header("pos", "3").async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
+						jsobj.append("element", partsSearcheq[1]);
+						Future<Response> searceq = target.path("/server/searcheq").request().header("pos", posSearcheq).async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
 						List<Entry> seqlist = searceq.get().readEntity(new GenericType<List<Entry>>(){});
 						for(Entry seqentry : seqlist)
 							System.out.println("Call: /server/searcheq ; Response: " + seqentry.toString());
 						break;
 					case "6":
+						System.out.println("[pos] [val]");
+						String resSearchneq = br.readLine();
+						String partsSearchneq[] = resSearchneq.split(" ");
+						int posSearchneq = Integer.parseInt(partsSearchneq[0]);
 						JSONObject jsobj2 = new JSONObject();
-						jsobj2.append("element", "ya");
-						Future<Response> searchneq = target.path("/server/searchneq").request().header("pos", "3").async().post(Entity.entity(jsobj2.toString(),MediaType.APPLICATION_JSON));
+						jsobj2.append("element", partsSearchneq[1]);
+						Future<Response> searchneq = target.path("/server/searchneq").request().header("pos", posSearchneq).async().post(Entity.entity(jsobj2.toString(),MediaType.APPLICATION_JSON));
 						List<Entry> seqlist2 = searchneq.get().readEntity(new GenericType<List<Entry>>(){});
 						for(Entry seqentry : seqlist2)
 							System.out.println("Call: /server/searchneq ; Response: " + seqentry.toString());
@@ -278,6 +301,26 @@ public class ClientGet0 {
 							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
 						break;
 					case "9":
+						System.out.println("[number of entries]");
+						int nrEntriesAnd = Integer.parseInt(br.readLine());
+						List<Entry> entriesAnd = new ArrayList<Entry>();
+						for(int i = 0; i < nrEntriesAnd; i++){
+							Entry entryAND = new Entry();
+							System.out.println("(Entry "+ (i+1) +"/"+nrEntriesAnd+ ") [entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
+							String entryLine = br.readLine();
+							String[] entryParts = entryLine.split(" ");
+							for(int j = 0 ; j < entryParts.length ; j ++){
+								if(allowedTypes[j] instanceof Integer)
+									entryAND.addCustomElem(Integer.parseInt(entryParts[j])); 
+								else
+									entryAND.addCustomElem(entryParts[j]);
+							}
+							entriesAnd.add(entryAND);
+						}
+						Future<Response> searchentryand = target.path("/server/searchentryand").request().async().post(Entity.entity(entriesAnd,MediaType.APPLICATION_JSON));
+						List<Entry> seqlist5 = searchentryand.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlist5)
+							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
 						break;
 					case "10":
 						break;
