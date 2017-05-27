@@ -69,8 +69,25 @@ public class ServerResource {
 	@ManagedAsync
 	public void putset(@HeaderParam("key") String key, Entry entry, @Suspended final AsyncResponse asyncResponse){
 		Entry n = entry;
+		
 		if(activeEncryption)
 			n = conf.encryptEntry(entry);
+		else{
+			//convert Integers to bigintegers
+			Entry specialEntry = new Entry();
+			Object[] types = conf.getTypes();
+			List<Object> vals = n.values;
+			int size = vals.size();
+			for(int i = 0 ; i < size ; i++){
+				if(types[i] instanceof Integer){
+					int j = (int)vals.get(i);
+					specialEntry.addCustomElem(new BigInteger(Integer.toString(j)));
+				}else{
+					specialEntry.addCustomElem((String)vals.get(i));
+				}
+			}
+			n = specialEntry;
+		}
 		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -226,8 +243,13 @@ public class ServerResource {
 	            		entry.values.remove(pos);
 	            		if(activeEncryption)
 	            			entry.values.add(pos,conf.encryptElem(pos, obj));
-	            		else
-	            			entry.values.add(pos,obj);
+	            		else{
+	            			Object[] types = conf.getTypes();
+	            			if(types[pos] instanceof Integer)
+	            				entry.values.add(pos,new BigInteger(Integer.toString((int)obj)));
+	            			else
+	            				entry.values.add(pos,obj);
+	            		}
 	            		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",entry);
 	            		Future<Object> future = Patterns.ask(proxy, write, timeout);
 	            		future.onComplete(new OnComplete<Object>() {
@@ -373,10 +395,9 @@ public class ServerResource {
 		                        			//deliver as it is (uncrypted)
 		                        			ReadResult res2 = (ReadResult)result;
 			        	            		Entry entry2 = res2.v();
-			        	            		int firstVal = (Integer)entry1.getElem(pos);
-			        	            		int secondVal = (Integer)entry2.getElem(pos);
-			        	            		String resp = Integer.toString(firstVal+secondVal);
-			        	            		asyncResponse.resume(Response.ok().entity(resp).build());
+			        	            		BigInteger firstVal = (BigInteger)entry1.getElem(pos);
+			        	            		BigInteger secondVal = (BigInteger)entry2.getElem(pos);
+			        	            		asyncResponse.resume(Response.ok().entity(firstVal.add(secondVal)).build());
 		                        		}
 		                        	}
 		                        }
@@ -488,10 +509,9 @@ public class ServerResource {
 		                        			try{
 		                        				ReadResult res2 = (ReadResult)result;
 				        	            		Entry entry2 = res2.v();
-				        	            		int firstVal = (Integer)entry1.getElem(pos);
-				        	            		int secondVal = (Integer)entry2.getElem(pos);
-				        	            		String resp = Integer.toString(firstVal*secondVal);
-				        	            		asyncResponse.resume(Response.ok().entity(resp).build());
+				        	            		BigInteger firstVal = (BigInteger)entry1.getElem(pos);
+				        	            		BigInteger secondVal = (BigInteger)entry2.getElem(pos);
+				        	            		asyncResponse.resume(Response.ok().entity(firstVal.multiply(secondVal)).build());
 			                        		}catch(Exception e){
 			                        			e.printStackTrace();
 			                        		}
