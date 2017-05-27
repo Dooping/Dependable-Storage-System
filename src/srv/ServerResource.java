@@ -53,7 +53,7 @@ public class ServerResource {
 	
 	public ServerResource(){
 		conf = new EntryConfig(EntryConfig.CONF_FILE);
-		activeEncryption = true; //set as true for testing
+		activeEncryption = false; //set as true for testing
 	}
 	
 	@GET
@@ -373,9 +373,10 @@ public class ServerResource {
 		                        			//deliver as it is (uncrypted)
 		                        			ReadResult res2 = (ReadResult)result;
 			        	            		Entry entry2 = res2.v();
-			        	            		BigInteger big1True = (BigInteger) entry1.getElem(pos);
-			        	            		BigInteger big2True = (BigInteger) entry2.getElem(pos);
-			        	            		asyncResponse.resume(Response.ok().entity(big1True.add(big2True).toString()).build());
+			        	            		int firstVal = (Integer)entry1.getElem(pos);
+			        	            		int secondVal = (Integer)entry2.getElem(pos);
+			        	            		String resp = Integer.toString(firstVal+secondVal);
+			        	            		asyncResponse.resume(Response.ok().entity(resp).build());
 		                        		}
 		                        	}
 		                        }
@@ -421,6 +422,7 @@ public class ServerResource {
 		                		asyncResponse.resume(Response.ok().entity(truePaiVal.toString()).build());
 	                		}else{
 	                			//deliver as it is (uncrypted)
+	                			System.out.println("HERE:"+result.toString());
 	                			asyncResponse.resume(Response.ok().entity(res.res().toString()).build());
 	                		}
 	                	}
@@ -484,11 +486,12 @@ public class ServerResource {
 		                        		}else{
 		                        			//deliver as it is (uncrypted)
 		                        			try{
-				                        		ReadResult res2 = (ReadResult)result;
+		                        				ReadResult res2 = (ReadResult)result;
 				        	            		Entry entry2 = res2.v();
-				        	            		BigInteger big1True = (BigInteger) entry1.getElem(pos);
-				        	            		BigInteger big2True = (BigInteger) entry2.getElem(pos); 
-				                        		asyncResponse.resume(Response.ok().entity(big1True.multiply(big2True).toString()).build());
+				        	            		int firstVal = (Integer)entry1.getElem(pos);
+				        	            		int secondVal = (Integer)entry2.getElem(pos);
+				        	            		String resp = Integer.toString(firstVal*secondVal);
+				        	            		asyncResponse.resume(Response.ok().entity(resp).build());
 			                        		}catch(Exception e){
 			                        			e.printStackTrace();
 			                        		}
@@ -497,7 +500,6 @@ public class ServerResource {
 		                        }
 		                    }, actorSystem.dispatcher());
 	            		}
-	            		
 	            	}
 	            }
 	        }, actorSystem.dispatcher());

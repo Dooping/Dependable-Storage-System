@@ -133,7 +133,7 @@ public class ClientGet0 {
 				Entry n = new Entry();
 				for(int i = 1; i < parts.length; i++){
 					if(allowedTypes[i-1] instanceof Integer)//since i starts at 1, use i-1 to go get the first index of allowedTypes
-						n.addCustomElem(Integer.parseInt(parts[i])); 
+						n.addCustomElem(new BigInteger(parts[i])); 
 					else
 						n.addCustomElem(parts[i]); 
 				}
