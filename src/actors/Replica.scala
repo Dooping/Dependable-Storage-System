@@ -147,7 +147,7 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
       if(encrypted)
         res = HomoMult.multiply(first._2._1.getElem(pos).asInstanceOf[BigInteger], second._2._1.getElem(pos).asInstanceOf[BigInteger], key)
       else
-        res = first._2._1.getElem(pos).asInstanceOf[BigInteger].add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
+        res = first._2._1.getElem(pos).asInstanceOf[BigInteger].multiply(second._2._1.getElem(pos).asInstanceOf[BigInteger])
       while(entries.hasNext){
         second = entries.next()
         if(encrypted)
