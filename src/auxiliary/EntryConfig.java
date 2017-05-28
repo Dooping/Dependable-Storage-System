@@ -217,11 +217,11 @@ public class EntryConfig {
 		Entry encryptedEntry = raw;
 		List<Object> vals = new ArrayList<Object>(); //to store the uncripted values
 		System.out.println("=====[DECRYPTING]=====");
-		System.out.println("Encripted Elem:");
+		System.out.println("Encripted Entry:");
 		System.out.println(encryptedEntry.values);
 		System.out.println("Keys to Decript:");
 		System.out.println(keys);
-		System.out.println("Decripting Elem:");
+		System.out.println("Decripting Entry:");
 		
 		int size = encryptedEntry.values.size();
 		for(int i = 0 ; i < size ; i++){
@@ -456,7 +456,7 @@ public class EntryConfig {
 			String line2 = br.readLine();
 			ops = line2.split(" ");
 			
-			configString = configString + line1 + "\n" + line2;
+			configString = configString + line1 + "#" + line2;
 		
 			
 		}catch(Exception e){

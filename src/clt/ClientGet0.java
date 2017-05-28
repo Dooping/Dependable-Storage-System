@@ -96,17 +96,16 @@ public class ClientGet0 {
 
 		URI baseURI = UriBuilder.fromUri("https://" + hostname + "/").build();
 		WebTarget target = client.target(baseURI);
-
-		Benchmarks test = new Benchmarks(target); // for the benchmarks
-		
+	
 		//the server will return the entry configuration so the client can insert entries
 		Future<Response> fut = target.path("/server")
 				.request().async().get();
 		String configString = fut.get().readEntity(String.class);
 		
-		//process the Entry configuration returned from the server
-		String split[] = configString.split("\n"); //int string int string int string/\n& $ # " !
-		String types[] = split[0].split(" "); //int string int string int string
+		//process the SERVER onfiguration returned from the server
+		String split[] = configString.split("#"); //[types]#[ops]#Encrypted:[true/false]
+		String types[] = split[0].split(" "); //[types]
+		String isEncrypted[] = split[2].split(":"); //Encrypted:[true/false]
 		Object allowedTypes[] = new Object[types.length];
 		for(int i = 0 ; i < types.length ; i++){
 			if(types[i].equalsIgnoreCase("int"))
@@ -114,14 +113,18 @@ public class ClientGet0 {
 			else
 				allowedTypes[i] = new String();
 		}
+		boolean activeEncryption = false;
+		if(isEncrypted[1].equalsIgnoreCase("true"))
+			activeEncryption = true;
+		Benchmarks test = new Benchmarks(target,activeEncryption); // for the benchmarks
 		
-		configString = configString.replace("\n", ") Allowed Ops: ");
+		configString = configString.replace("#", " ");
+		configString ="Valid Entry: ("+ split[0] + ") Allowed Ops: (" + split[1] + ") " + split[2]; 
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		boolean run = true;
 		while(run){
-			System.out.println("Valid Entry: ("+configString+"\n[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
-					+ " ReadElem\n[7] isElem\n[8] Extensive API\n[9] Benchmark1\n[10] Benchmark2\n[11]"
-					+ " Benchmark3\n[12] Benchmark4\n[13] Benchmark5");
+			System.out.println(configString+"\n[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"
+					+ " ReadElem\n[7] isElem\n[8] Extensive API\n[9] Benchmarks");
 	        String s = br.readLine();
 			switch(s){
 			case "0": run = false;
@@ -400,26 +403,28 @@ public class ClientGet0 {
 						break;
 					}
 					
-					
 				}
 				break;
-			case "9"://Test #8 [BENCHMARK1]
-				test.benchmark1();
-				break;
-			case "10"://Test #9 [BENCHMARK2]
-				test.benchmark2();
-				break;
-			case "11"://Test #10 [BENCHMARK3]
-				test.benchmark3();
-				break;
-			case "12"://Test #11 [BENCHMARK4]
-				test.benchmark4();
-				break;
-			case "13"://Test #12 [BENCHMARK5]
-				test.benchmark5();
+			case "9"://Test #8 [BENCHMARKS]
+				String m ;
+				boolean benchRun = true;
+				while(benchRun){
+					System.out.println("[0] Go Back\n[1] Benchmark1\n[2] Benchmark2\n[3] Benchmark3"+
+							"\n[4] Benchmark4\n[5] Benchmark5\n[6] Benchmark E1/E3\n[7] Benchmark E2/E4");
+					m = br.readLine();
+					switch(m){
+					case "0": benchRun = false; break;
+					case "1":	test.benchmark1(); break;
+					case "2":	test.benchmark2(); break;
+					case "3":	test.benchmark3(); break;
+					case "4":    test.benchmark4(); break;
+					case "5":	test.benchmark5(); break;
+					case "6":    test.benchmarkE1E3(); break;
+					case "7":break;
+					}
+				}
 				break;
 			}
-			
 		}
 	}
 

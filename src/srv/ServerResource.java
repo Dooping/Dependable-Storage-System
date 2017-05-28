@@ -53,14 +53,14 @@ public class ServerResource {
 	
 	public ServerResource(){
 		conf = new EntryConfig(EntryConfig.CONF_FILE);
-		activeEncryption = false; //set as true for testing
+		activeEncryption = true; //set as true for testing
 	}
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@ManagedAsync
 	public void get(@Suspended final AsyncResponse asyncResponse){
-		asyncResponse.resume(Response.ok().entity(conf.getConfigString()).build());
+		asyncResponse.resume(Response.ok().entity(conf.getConfigString()+"#Encrypted:"+activeEncryption).build());
 	}
 	
 	@POST
@@ -675,7 +675,6 @@ public class ServerResource {
 		@ManagedAsync
 		public void searchEntry(Entry entry, @Suspended final AsyncResponse asyncResponse){
 			Entry specialEntry = new Entry();
-			System.out.println("[SEARCHENTRY] " + entry.toString());
 			boolean[] searchables = conf.getOpIndex("%");
 			
 			List<Object> values = entry.values;
@@ -689,8 +688,6 @@ public class ServerResource {
 					specialEntry.addCustomElem(null);
 				}
 			}
-			
-			System.out.println("[SEARCHENTRY] " + entry.toString());
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
 			SearchEntry sent = new SearchEntry(System.nanoTime(),specialEntry,activeEncryption);
@@ -740,7 +737,6 @@ public class ServerResource {
 				List<Object> values = n.values;
 				for(int j = 0 ; j < values.size() ; j ++){
 					if(values.get(j)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
-						System.out.println("[SEARCHENTRYOR] Searchable:" + i );
 						if(activeEncryption)
 							specialEntry.addCustomElem(conf.encryptElem(j, values.get(j)));
 						else
@@ -801,7 +797,6 @@ public class ServerResource {
 				List<Object> values = n.values;
 				for(int j = 0 ; j < values.size() ; j ++){
 					if(values.get(j)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
-						System.out.println("[SEARCHENTRYAND] Searchable:" + i );
 						if(activeEncryption)
 							specialEntry.addCustomElem(conf.encryptElem(j, values.get(j)));
 						else
@@ -933,12 +928,13 @@ public class ServerResource {
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
-			long val =new Long(Integer.parseInt(res));
+			int val =Integer.parseInt(res);
+			long secVal = new Long(Integer.parseInt(res));
 			if(activeEncryption)
-				val = (long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchEqInt seq = new SearchEqInt(System.nanoTime(), pos, val);
+			SearchEqInt seq = new SearchEqInt(System.nanoTime(), pos, secVal);
 			Future<Object> future = Patterns.ask(proxy, seq, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
@@ -979,12 +975,13 @@ public class ServerResource {
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
-			long val =new Long(Integer.parseInt(res));
+			int val =Integer.parseInt(res);
+			long secVal = new Long(Integer.parseInt(res));
 			if(activeEncryption)
-				val = (long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchGt seq = new SearchGt(System.nanoTime(), pos, val);
+			SearchGt seq = new SearchGt(System.nanoTime(), pos, secVal);
 			Future<Object> future = Patterns.ask(proxy, seq, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
@@ -1025,12 +1022,13 @@ public class ServerResource {
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
-			long val =new Long(Integer.parseInt(res));
+			int val =Integer.parseInt(res);
+			long secVal = new Long(Integer.parseInt(res));
 			if(activeEncryption)
-				val = (long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchGtEq seq = new SearchGtEq(System.nanoTime(), pos, val);
+			SearchGtEq seq = new SearchGtEq(System.nanoTime(), pos, secVal);
 			Future<Object> future = Patterns.ask(proxy, seq, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
@@ -1071,12 +1069,13 @@ public class ServerResource {
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
-			long val =new Long(Integer.parseInt(res));
+			int val =Integer.parseInt(res);
+			long secVal = new Long(Integer.parseInt(res));
 			if(activeEncryption)
-				val = (long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchLt seq = new SearchLt(System.nanoTime(), pos, val);
+			SearchLt seq = new SearchLt(System.nanoTime(), pos, secVal);
 			Future<Object> future = Patterns.ask(proxy, seq, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
@@ -1117,12 +1116,13 @@ public class ServerResource {
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
-			long val =new Long(Integer.parseInt(res));
+			int val =Integer.parseInt(res);
+			long secVal = new Long(Integer.parseInt(res));
 			if(activeEncryption)
-				val = (long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchLtEq seq = new SearchLtEq(System.nanoTime(), pos, val);
+			SearchLtEq seq = new SearchLtEq(System.nanoTime(), pos, secVal);
 			Future<Object> future = Patterns.ask(proxy, seq, timeout);
 			future.onComplete(new OnComplete<Object>() {
 

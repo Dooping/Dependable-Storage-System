@@ -1,10 +1,12 @@
 package tests;
 
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -23,29 +25,28 @@ public class Benchmarks {
 	File resFile;
 	FileWriter fw;
 	StringBuilder sb;
+	boolean activeEncryption;
 	
-	public Benchmarks(WebTarget target) throws Exception{
+	public Benchmarks(WebTarget target,boolean activeEncryption) throws Exception{
 		this.target = target;
-		resFile = new File("results.csv");
+		if(activeEncryption)
+			resFile = new File("resultsEncrypted.csv");
+		else
+			resFile = new File("resultsUncrypted.csv");
 		fw = new FileWriter(resFile);
 		sb = new StringBuilder();
 
-		sb.append("benchmark");
-		sb.append(',');
-		sb.append("operation");
-		sb.append(',');
-		sb.append("status");
-		sb.append(",");
-		sb.append("time");
-		sb.append('\n');
+		sb.append("benchmark,operation,status,time,encrypted\n");
 		
 		fw.write(sb.toString());
 		fw.close();
+		
+		this.activeEncryption = activeEncryption;
 	
 	}
 	
-	public void appendStringBuilder(String benchmark, String op, int status,String time ){
-		String entry = benchmark + ',' + op + ',' + status + ',' + time+'\n';
+	public void appendStringBuilder(String benchmark, String op, int status,String time){
+		String entry = benchmark + ',' + op + ',' + status + ',' + time+','+activeEncryption+'\n';
 		sb.append(entry);
 	}
 	
@@ -285,6 +286,124 @@ public class Benchmarks {
 		fw.write(sb.toString());
 		fw.close();
 		
+	}
+	
+	public void benchmarkE1E3() throws Exception{
+		/*
+		target.path("/server/putset")
+		.request().header("key", "sbp").async().
+		post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+		
+		target.path("/server/putset")
+		.request().header("key", "dg").async().
+		post(Entity.entity(new Entry(2,"three",4,"five",6,"seven"), MediaType.APPLICATION_JSON));
+		
+		target.path("/server/putset")
+		.request().header("key", "csd").async().
+		post(Entity.entity(new Entry(20,"sd",3,"asd",5,"csd"), MediaType.APPLICATION_JSON));
+		*/
+		
+		ArrayList<Entry> entries = new ArrayList<Entry>();
+		entries.add(new Entry(1,"two",3,"four",5,"six"));
+		entries.add(new Entry(2,"three",4,"five",6,"seven"));
+		entries.add(new Entry(20,"sd",3,"asd",5,"csd"));
+		JSONObject jsonObj = new JSONObject();
+		JSONObject jsonObj2 = new JSONObject();
+		jsonObj.append("element", "2");
+		jsonObj2.append("element", "four");
+		
+		fw = new FileWriter(resFile,true); //the true is to append to the end of file
+		sb = new StringBuilder();//clears the previous stringbuilder
+		Future<Response> value;
+		long nanotimeStart,nanotimeEnd ;
+		float ms;
+		String msstring;
+		int status;
+		String benchmark = "E1";
+		if(activeEncryption)
+			benchmark = "E3";
+		
+		//10 search ops
+		for(int i = 0 ; i < 10 ; i ++){
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/searcheq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEQ",status,msstring);
+			
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchneq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SNEQ",status,msstring);
+			
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchentry").request().async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SE",status,msstring);
+	       
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEOR",status,msstring);
+	        
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEAND",status,msstring);
+	      
+	        value = target.path("/server/searcheqint").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEQINT",status,msstring);
+	        
+	        value = target.path("/server/searchgt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SGT",status,msstring);
+	        
+	        value = target.path("/server/searchgteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SGTEQ",status,msstring);
+	        
+	        value = target.path("/server/searchlt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SLT",status,msstring);
+	      
+	        value = target.path("/server/searchlteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SLTEQ",status,msstring);
+	        /*  */
+		}
+		fw.write(sb.toString());
+		fw.close();
 	}
 	
 }
