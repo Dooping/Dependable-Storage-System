@@ -73,15 +73,23 @@ public class ServerResource {
 		if(activeEncryption)
 			n = conf.encryptEntry(entry);
 		else{
-			//convert Integers to bigintegers
+			//convert Integers to bigintegers, the order remain as long
 			Entry specialEntry = new Entry();
 			Object[] types = conf.getTypes();
+			boolean[] opsLess = conf.getOpIndex("<");
+			boolean[] opsLesseq = conf.getOpIndex("<=");
+			boolean[] opsGreat = conf.getOpIndex(">");
+			boolean[] opsGreateq = conf.getOpIndex(">=");
 			List<Object> vals = n.values;
 			int size = vals.size();
 			for(int i = 0 ; i < size ; i++){
 				if(types[i] instanceof Integer){
-					int j = (int)vals.get(i);
-					specialEntry.addCustomElem(new BigInteger(Integer.toString(j)));
+					if(opsLess[i] || opsLesseq[i] || opsGreat[i] || opsGreateq[i]){
+						specialEntry.addCustomElem(new Long((Integer)vals.get(i)) );
+					}else{
+						int j = (int)vals.get(i);
+						specialEntry.addCustomElem(new BigInteger(Integer.toString(j)));
+					}
 				}else{
 					specialEntry.addCustomElem((String)vals.get(i));
 				}
@@ -843,48 +851,308 @@ public class ServerResource {
 		@Path("/orderls")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response orderLS(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){	
-			return Response.ok().build();
+		public void orderLS(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){	
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			OrderLS orderls = new OrderLS(System.nanoTime(),pos);
+			Future<Object> future = Patterns.ask(proxy, orderls, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		EntrySet res = (EntrySet) result;
+		            	List<Entry> seqlist = res.set();
+		            	if(seqlist!= null){
+		            		if(activeEncryption){
+		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
+					            for(Entry n : seqlist){
+					            	decryptedEntries.add(conf.decryptEntry(n));
+					            }
+				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
+		            		}else{
+		            			//deliver as it is (uncrypted)
+		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
+		            		}
+			            }else{
+			               asyncResponse.resume(Response.ok().entity(false).build());
+			            }
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@GET
 		@Path("/ordersl")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response orderSL(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void orderSL(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			OrderSL orderls = new OrderSL(System.nanoTime(),pos);
+			Future<Object> future = Patterns.ask(proxy, orderls, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+	            		EntrySet res = (EntrySet) result;
+		            	List<Entry> seqlist = res.set();
+		            	if(seqlist!= null){
+		            		if(activeEncryption){
+		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
+					            for(Entry n : seqlist){
+					            	decryptedEntries.add(conf.decryptEntry(n));
+					            }
+				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
+		            		}else{
+		            			//deliver as it is (uncrypted)
+		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
+		            		}
+			            }else{
+			               asyncResponse.resume(Response.ok().entity(false).build());
+			            }
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
+		}
+		
+		@POST
+		@Path("/searcheqint")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ManagedAsync
+		public void searchEqInt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			String res =(String) jdata.get(0);
+			long val =new Long(Integer.parseInt(res));
+			if(activeEncryption)
+				val = (long)conf.encryptElem(pos, val);
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchEqInt seq = new SearchEqInt(System.nanoTime(), pos, val);
+			Future<Object> future = Patterns.ask(proxy, seq, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+		            	EntrySet res = (EntrySet) result;
+		            	List<Entry> seqlist = res.set();
+		            	if(seqlist!= null){
+		            		if(activeEncryption){
+		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
+					            for(Entry n : seqlist){
+					            	decryptedEntries.add(conf.decryptEntry(n));
+					            }
+				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
+		            		}else{
+		            			//deliver as it is (uncrypted)
+		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
+		            		}
+			            }else{
+			               asyncResponse.resume(Response.ok().entity(false).build());
+			            }
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@POST
 		@Path("/searchgt")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response searchGt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void searchGt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			String res =(String) jdata.get(0);
+			long val =new Long(Integer.parseInt(res));
+			if(activeEncryption)
+				val = (long)conf.encryptElem(pos, val);
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchGt seq = new SearchGt(System.nanoTime(), pos, val);
+			Future<Object> future = Patterns.ask(proxy, seq, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+		            	EntrySet res = (EntrySet) result;
+		            	List<Entry> seqlist = res.set();
+		            	if(seqlist!= null){
+		            		if(activeEncryption){
+		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
+					            for(Entry n : seqlist){
+					            	decryptedEntries.add(conf.decryptEntry(n));
+					            }
+				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
+		            		}else{
+		            			//deliver as it is (uncrypted)
+		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
+		            		}
+			            }else{
+			               asyncResponse.resume(Response.ok().entity(false).build());
+			            }
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@POST
 		@Path("/searchgteq")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response searchGtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){	
-			return Response.ok().build();
+		public void searchGtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){	
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			String res =(String) jdata.get(0);
+			long val =new Long(Integer.parseInt(res));
+			if(activeEncryption)
+				val = (long)conf.encryptElem(pos, val);
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchGtEq seq = new SearchGtEq(System.nanoTime(), pos, val);
+			Future<Object> future = Patterns.ask(proxy, seq, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+		            	EntrySet res = (EntrySet) result;
+		            	List<Entry> seqlist = res.set();
+		            	if(seqlist!= null){
+		            		if(activeEncryption){
+		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
+					            for(Entry n : seqlist){
+					            	decryptedEntries.add(conf.decryptEntry(n));
+					            }
+				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
+		            		}else{
+		            			//deliver as it is (uncrypted)
+		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
+		            		}
+			            }else{
+			               asyncResponse.resume(Response.ok().entity(false).build());
+			            }
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@POST
 		@Path("/searchlt")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response searchLt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){		
-			return Response.ok().build();
+		public void searchLt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){		
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			String res =(String) jdata.get(0);
+			long val =new Long(Integer.parseInt(res));
+			if(activeEncryption)
+				val = (long)conf.encryptElem(pos, val);
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchLt seq = new SearchLt(System.nanoTime(), pos, val);
+			Future<Object> future = Patterns.ask(proxy, seq, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+		            	EntrySet res = (EntrySet) result;
+		            	List<Entry> seqlist = res.set();
+		            	if(seqlist!= null){
+		            		if(activeEncryption){
+		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
+					            for(Entry n : seqlist){
+					            	decryptedEntries.add(conf.decryptEntry(n));
+					            }
+				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
+		            		}else{
+		            			//deliver as it is (uncrypted)
+		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
+		            		}
+			            }else{
+			               asyncResponse.resume(Response.ok().entity(false).build());
+			            }
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 		
 		@POST
 		@Path("/searchlteq")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public Response searchLtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
-			return Response.ok().build();
+		public void searchLtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			String res =(String) jdata.get(0);
+			long val =new Long(Integer.parseInt(res));
+			if(activeEncryption)
+				val = (long)conf.encryptElem(pos, val);
+			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
+			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+			SearchLtEq seq = new SearchLtEq(System.nanoTime(), pos, val);
+			Future<Object> future = Patterns.ask(proxy, seq, timeout);
+			future.onComplete(new OnComplete<Object>() {
+
+	            public void onComplete(Throwable failure, Object result) throws Exception {
+	            	
+	            	if(failure != null){
+	            		if(failure.getMessage() != null)
+	            			asyncResponse.resume(Response.serverError().entity(failure.getMessage()).build());
+	            		else
+	            			asyncResponse.resume(Response.serverError());
+	            	}else{
+		            	EntrySet res = (EntrySet) result;
+		            	List<Entry> seqlist = res.set();
+		            	if(seqlist!= null){
+		            		if(activeEncryption){
+		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
+					            for(Entry n : seqlist){
+					            	decryptedEntries.add(conf.decryptEntry(n));
+					            }
+				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
+		            		}else{
+		            			//deliver as it is (uncrypted)
+		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
+		            		}
+			            }else{
+			               asyncResponse.resume(Response.ok().entity(false).build());
+			            }
+	            	}
+	            }
+	        }, actorSystem.dispatcher());
 		}
 
 }

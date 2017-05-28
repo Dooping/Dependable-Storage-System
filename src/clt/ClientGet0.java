@@ -201,7 +201,7 @@ public class ClientGet0 {
 				while(extensiveRun){
 					System.out.println("Valid Entry: ("+configString+"\n[0] Go Back\n[1] Sum\n[2] SumAll\n[3] Mult\n[4] MultAll\n[5]"
 							+ " SearchEq\n[6] SearchNEq\n[7] SearchEntry\n[8] SearchEntryOR\n[9] SearchEntryAND\n[10]"
-							+ " OrderLS\n[11] OrderSL\n[12] SearchGt\n[13] SearchGtEq\n[14] SearchLt\n[15] SearchLtEq");
+							+ " OrderLS\n[11] OrderSL\n[12] SearchEqInt\n[13] SearchGt\n[14] SearchGtEq\n[15] SearchLt\n[16] SearchLtEq");
 					String w = br.readLine();
 					
 					switch(w){
@@ -323,18 +323,80 @@ public class ClientGet0 {
 							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
 						break;
 					case "10":
+						System.out.println("[pos]");
+						int posOrderls = Integer.parseInt(br.readLine());
+						Future<Response> orderls = target.path("/server/orderls").request().header("pos", posOrderls).async().get();
+						List<Entry> seqlist6 = orderls.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlist6)
+							System.out.println("Call: /server/orderls ; Response: " + seqentry.toString());
 						break;
 					case "11":
+						System.out.println("[pos]");
+						int posOrdersl = Integer.parseInt(br.readLine());
+						Future<Response> ordersl = target.path("/server/ordersl").request().header("pos", posOrdersl).async().get();
+						List<Entry> seqlist7 = ordersl.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlist7)
+							System.out.println("Call: /server/ordersl ; Response: " + seqentry.toString());
 						break;
 					case "12":
+						System.out.println("[pos] [val]");
+						String resSearcheqint = br.readLine();
+						String partsSearcheqint[] = resSearcheqint.split(" ");
+						int posSearcheqint = Integer.parseInt(partsSearcheqint[0]);
+						JSONObject jsoneqint = new JSONObject();
+						jsoneqint.append("element", partsSearcheqint[1]);
+						Future<Response> searcheqint = target.path("/server/searcheqint").request().header("pos", posSearcheqint).async().post(Entity.entity(jsoneqint.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlisteqint = searcheqint.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlisteqint)
+							System.out.println("Call: /server/searcheqint ; Response: " + seqentry.toString());
 						break;
 					case "13":
+						System.out.println("[pos] [val]");
+						String resSearchgt = br.readLine();
+						String partsSearchgt[] = resSearchgt.split(" ");
+						int posSearchgt = Integer.parseInt(partsSearchgt[0]);
+						JSONObject jsongt = new JSONObject();
+						jsongt.append("element", partsSearchgt[1]);
+						Future<Response> searchgt = target.path("/server/searchgt").request().header("pos", posSearchgt).async().post(Entity.entity(jsongt.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlistgt = searchgt.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlistgt)
+							System.out.println("Call: /server/searchgt ; Response: " + seqentry.toString());
 						break;
 					case "14":
+						System.out.println("[pos] [val]");
+						String resSearchgteq = br.readLine();
+						String partsSearchgteq[] = resSearchgteq.split(" ");
+						int posSearchgteq = Integer.parseInt(partsSearchgteq[0]);
+						JSONObject jsongteq = new JSONObject();
+						jsongteq.append("element", partsSearchgteq[1]);
+						Future<Response> searchgteq = target.path("/server/searchgteq").request().header("pos", posSearchgteq).async().post(Entity.entity(jsongteq.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlistgteq = searchgteq.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlistgteq)
+							System.out.println("Call: /server/searchgteq ; Response: " + seqentry.toString());
 						break;
 					case "15":
+						System.out.println("[pos] [val]");
+						String resSearchlt = br.readLine();
+						String partsSearchlt[] = resSearchlt.split(" ");
+						int posSearchlt = Integer.parseInt(partsSearchlt[0]);
+						JSONObject jsonlt = new JSONObject();
+						jsonlt.append("element", partsSearchlt[1]);
+						Future<Response> searchlt = target.path("/server/searchlt").request().header("pos", posSearchlt).async().post(Entity.entity(jsonlt.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlistlt = searchlt.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlistlt)
+							System.out.println("Call: /server/searchlt ; Response: " + seqentry.toString());
 						break;
 					case "16":
+						System.out.println("[pos] [val]");
+						String resSearchlteq = br.readLine();
+						String partsSearchlteq[] = resSearchlteq.split(" ");
+						int posSearchlteq = Integer.parseInt(partsSearchlteq[0]);
+						JSONObject jsonlteq = new JSONObject();
+						jsonlteq.append("element", partsSearchlteq[1]);
+						Future<Response> searchlteq = target.path("/server/searchlteq").request().header("pos", posSearchlteq).async().post(Entity.entity(jsonlteq.toString(),MediaType.APPLICATION_JSON));
+						List<Entry> seqlistlteq = searchlteq.get().readEntity(new GenericType<List<Entry>>(){});
+						for(Entry seqentry : seqlistlteq)
+							System.out.println("Call: /server/searchlteq ; Response: " + seqentry.toString());
 						break;
 					}
 					
