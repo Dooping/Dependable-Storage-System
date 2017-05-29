@@ -82,6 +82,10 @@ Config defaultCfg = ConfigFactory.load();
         Option quorumOp = new Option("q", "quorum", true, "quorum size");
         quorumOp.setRequired(false);
         options.addOption(quorumOp);
+        
+        Option encryptOp = new Option("e", "encrypt", false, "use homomorfic encryption");
+        encryptOp.setRequired(false);
+        options.addOption(encryptOp);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -105,6 +109,7 @@ Config defaultCfg = ConfigFactory.load();
 		int chance = Integer.parseInt(cmd.getOptionValue("chance", "0"));
 		int quorum = Integer.parseInt(cmd.getOptionValue("quorum", "5"));
 		int byzantine = Integer.parseInt(cmd.getOptionValue("byzantine", "0"));
+		boolean encrypt = cmd.hasOption("encrypt");
 		File keystore = KEYSTORE;
 		if (cmd.hasOption("keystore"))
 			keystore = new File(cmd.getOptionValue("keystore"));
@@ -137,7 +142,12 @@ Config defaultCfg = ConfigFactory.load();
 	                bind(system).to(ActorSystem.class);
 	            }
 	        });
-			config.register( new ServerResource());
+			config.register(new AbstractBinder() {
+	            protected void configure() {
+	                bind(encrypt).to(boolean.class);
+	            }
+	        });
+			config.register(new ServerResource());
 
 			SSLContext sslContext = SSLContext.getInstance("TLSv1");
 

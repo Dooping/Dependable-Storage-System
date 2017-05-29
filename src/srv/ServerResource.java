@@ -46,21 +46,20 @@ import org.json.*;
 public class ServerResource {
 
 	@Context ActorSystem actorSystem;
+	@Context boolean encrypt;
 	String value = "default";
 	Entry dummyEntry = new Entry(1,"two",3,"four",5,"six");
 	EntryConfig conf;
-	private boolean activeEncryption;
 	
 	public ServerResource(){
 		conf = new EntryConfig(EntryConfig.CONF_FILE);
-		activeEncryption = true; //set as true for testing
 	}
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@ManagedAsync
 	public void get(@Suspended final AsyncResponse asyncResponse){
-		asyncResponse.resume(Response.ok().entity(conf.getConfigString()+"#Encrypted:"+activeEncryption).build());
+		asyncResponse.resume(Response.ok().entity(conf.getConfigString()+"#Encrypted:"+encrypt).build());
 	}
 	
 	@POST
@@ -70,7 +69,7 @@ public class ServerResource {
 	public void putset(@HeaderParam("key") String key, Entry entry, @Suspended final AsyncResponse asyncResponse){
 		Entry n = entry;
 		
-		if(activeEncryption)
+		if(encrypt)
 			n = conf.encryptEntry(entry);
 		else{
 			//convert Integers to bigintegers, the order remain as long
@@ -134,7 +133,7 @@ public class ServerResource {
             		else
             			asyncResponse.resume(Response.serverError());
             	}else{
-            		if(activeEncryption){
+            		if(encrypt){
 	            		ReadResult res = (ReadResult)result;
 	            		asyncResponse.resume(Response.ok().entity(conf.decryptEntry(res.v())).build());
             		}else{
@@ -249,7 +248,7 @@ public class ServerResource {
             			asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity("Position not valid: " + pos).build());
             		else{
 	            		entry.values.remove(pos);
-	            		if(activeEncryption)
+	            		if(encrypt)
 	            			entry.values.add(pos,conf.encryptElem(pos, obj));
 	            		else{
 	            			Object[] types = conf.getTypes();
@@ -303,7 +302,7 @@ public class ServerResource {
             	}else{
             		ReadResult res = (ReadResult)result;
             		if(res.v()!=null){
-            			if(activeEncryption)
+            			if(encrypt)
             				asyncResponse.resume(Response.ok().entity(conf.decryptElem(pos, res.v().getElem(pos))).build());
             			else{ 
             				//deliver as it is (uncrypteds)
@@ -387,7 +386,7 @@ public class ServerResource {
 		                        		else
 		                        			asyncResponse.resume(Response.serverError());
 		                        	}else{
-		                        		if(activeEncryption){
+		                        		if(encrypt){
 		                        		try{
 			                        		ReadResult res2 = (ReadResult)result;
 			        	            		Entry entry2 = res2.v();
@@ -426,11 +425,11 @@ public class ServerResource {
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SumAll sum;
-			if(activeEncryption){
+			if(encrypt){
 				PaillierKey pkey = (PaillierKey) conf.keys.get(pos).getKey(0);
-				sum = new SumAll(System.nanoTime(),pos,activeEncryption,pkey.getNsquare());
+				sum = new SumAll(System.nanoTime(),pos,encrypt,pkey.getNsquare());
 			}else{
-				sum = new SumAll(System.nanoTime(),pos,activeEncryption,null);
+				sum = new SumAll(System.nanoTime(),pos,encrypt,null);
 			}
 			Future<Object> future = Patterns.ask(proxy, sum, timeout);
 			future.onComplete(new OnComplete<Object>() {
@@ -445,7 +444,7 @@ public class ServerResource {
 	            	}else{
 	            		SumMultAllResult res = (SumMultAllResult) result;
 	                	if(res.res()!=null){
-	                		if(activeEncryption){
+	                		if(encrypt){
 		                		BigInteger big = res.res();
 		                		BigInteger truePaiVal = HomoAdd.decrypt(big, (PaillierKey)conf.keys.get(pos).getKey(0));
 		                		asyncResponse.resume(Response.ok().entity(truePaiVal.toString()).build());
@@ -499,7 +498,7 @@ public class ServerResource {
 		                        		else
 		                        			asyncResponse.resume(Response.serverError());
 		                        	}else{
-		                        		if(activeEncryption){
+		                        		if(encrypt){
 			                        		try{
 				                        		ReadResult res2 = (ReadResult)result;
 				        	            		Entry entry2 = res2.v();
@@ -542,11 +541,11 @@ public class ServerResource {
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			MultAll mult ;
 			//missing: check if encryption is active > what to send to MultAll?
-			if(activeEncryption){
+			if(encrypt){
 				RSAPublicKey rsapubkey = (RSAPublicKey)conf.keys.get(pos).getKey(0);
-				mult = new MultAll(System.nanoTime(),pos,activeEncryption,rsapubkey);
+				mult = new MultAll(System.nanoTime(),pos,encrypt,rsapubkey);
 			}else{
-				mult = new MultAll(System.nanoTime(),pos,activeEncryption,null);
+				mult = new MultAll(System.nanoTime(),pos,encrypt,null);
 			}
 			Future<Object> future = Patterns.ask(proxy, mult, timeout);
 			future.onComplete(new OnComplete<Object>() {
@@ -559,7 +558,7 @@ public class ServerResource {
 	            		else
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
-	            		if(activeEncryption){
+	            		if(encrypt){
 		            		SumMultAllResult res = (SumMultAllResult) result;
 		            		BigInteger big = res.res();
 		                	RSAPrivateKey rsaprivKey =(RSAPrivateKey) conf.keys.get(pos).getKey(1);
@@ -585,7 +584,7 @@ public class ServerResource {
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String val =(String) jdata.get(0);
-			if(activeEncryption)
+			if(encrypt)
 				val = (String)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -604,7 +603,7 @@ public class ServerResource {
 		            	EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -631,7 +630,7 @@ public class ServerResource {
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String val =(String) jdata.get(0);
-			if(activeEncryption)
+			if(encrypt)
 				val = (String)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -650,7 +649,7 @@ public class ServerResource {
 	            		EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -680,7 +679,7 @@ public class ServerResource {
 			List<Object> values = entry.values;
 			for(int i = 0 ; i < values.size() ; i ++){
 				if(values.get(i)!=null && searchables[i]){ //se for diferente de null e for um campo de % (search)
-					if(activeEncryption)
+					if(encrypt)
 						specialEntry.addCustomElem(conf.encryptElem(i, values.get(i)));
 					else
 						specialEntry.addCustomElem(values.get(i));
@@ -690,7 +689,7 @@ public class ServerResource {
 			}
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
-			SearchEntry sent = new SearchEntry(System.nanoTime(),specialEntry,activeEncryption);
+			SearchEntry sent = new SearchEntry(System.nanoTime(),specialEntry,encrypt);
 			Future<Object> future = Patterns.ask(proxy, sent, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
@@ -704,7 +703,7 @@ public class ServerResource {
 	            		EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -737,7 +736,7 @@ public class ServerResource {
 				List<Object> values = n.values;
 				for(int j = 0 ; j < values.size() ; j ++){
 					if(values.get(j)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
-						if(activeEncryption)
+						if(encrypt)
 							specialEntry.addCustomElem(conf.encryptElem(j, values.get(j)));
 						else
 							specialEntry.addCustomElem(values.get(j));
@@ -750,7 +749,7 @@ public class ServerResource {
 			
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchEntryOr sent = new SearchEntryOr(System.nanoTime(),auxEntries,activeEncryption);
+			SearchEntryOr sent = new SearchEntryOr(System.nanoTime(),auxEntries,encrypt);
 			Future<Object> future = Patterns.ask(proxy, sent, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
@@ -764,7 +763,7 @@ public class ServerResource {
 	            		EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -797,7 +796,7 @@ public class ServerResource {
 				List<Object> values = n.values;
 				for(int j = 0 ; j < values.size() ; j ++){
 					if(values.get(j)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
-						if(activeEncryption)
+						if(encrypt)
 							specialEntry.addCustomElem(conf.encryptElem(j, values.get(j)));
 						else
 							specialEntry.addCustomElem(values.get(j));
@@ -810,7 +809,7 @@ public class ServerResource {
 			
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-			SearchEntryAnd sent = new SearchEntryAnd(System.nanoTime(),auxEntries,activeEncryption);
+			SearchEntryAnd sent = new SearchEntryAnd(System.nanoTime(),auxEntries,encrypt);
 			Future<Object> future = Patterns.ask(proxy, sent, timeout);
 			future.onComplete(new OnComplete<Object>() {
 
@@ -824,7 +823,7 @@ public class ServerResource {
 	            		EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -863,7 +862,7 @@ public class ServerResource {
 	            		EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -902,7 +901,7 @@ public class ServerResource {
 	            		EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -930,7 +929,7 @@ public class ServerResource {
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
-			if(activeEncryption)
+			if(encrypt)
 				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -949,7 +948,7 @@ public class ServerResource {
 		            	EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -977,7 +976,7 @@ public class ServerResource {
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
-			if(activeEncryption)
+			if(encrypt)
 				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -996,7 +995,7 @@ public class ServerResource {
 		            	EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -1024,7 +1023,7 @@ public class ServerResource {
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
-			if(activeEncryption)
+			if(encrypt)
 				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -1043,7 +1042,7 @@ public class ServerResource {
 		            	EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -1071,7 +1070,7 @@ public class ServerResource {
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
-			if(activeEncryption)
+			if(encrypt)
 				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -1090,7 +1089,7 @@ public class ServerResource {
 		            	EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
@@ -1118,7 +1117,7 @@ public class ServerResource {
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
-			if(activeEncryption)
+			if(encrypt)
 				secVal = (Long)conf.encryptElem(pos, val);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -1137,7 +1136,7 @@ public class ServerResource {
 		            	EntrySet res = (EntrySet) result;
 		            	List<Entry> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(activeEncryption){
+		            		if(encrypt){
 		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
 					            for(Entry n : seqlist){
 					            	decryptedEntries.add(conf.decryptEntry(n));
