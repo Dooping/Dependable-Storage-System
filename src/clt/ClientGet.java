@@ -68,9 +68,10 @@ public class ClientGet {
 
 		URI baseURI = UriBuilder.fromUri("http://" + hostname + "/").build();
 		WebTarget target = client.target(baseURI);
-		Benchmarks test = new Benchmarks(target); // for the benchmarks
 		
+		Benchmarks test = new Benchmarks(target,false); // for the benchmarks
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		
 		boolean run = true;
 		while(run){
 			System.out.println("[0] Sair\n[1] PutSet\n[2] Getset\n[3] AddElem\n[4] RemoveSet\n[5] WriteElem\n[6]"

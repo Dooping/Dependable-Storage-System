@@ -5,7 +5,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -13,17 +12,13 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import Datatypes.*;
-import auxiliary.*;
 import akka.actor.ActorSelection;
-//import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.dispatch.OnComplete;
 import akka.pattern.Patterns;
@@ -32,14 +27,9 @@ import auxiliary.EntryConfig;
 import hlib.hj.mlib.HomoAdd;
 import hlib.hj.mlib.HomoMult;
 import hlib.hj.mlib.PaillierKey;
-
 import org.glassfish.jersey.server.ManagedAsync;
-
-
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-
 import org.json.*;
 
 @Path("/server")

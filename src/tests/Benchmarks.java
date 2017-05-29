@@ -327,6 +327,171 @@ public class Benchmarks {
 		for(int i = 0 ; i < 10 ; i ++){
 			
 			nanotimeStart = System.nanoTime();
+			value = target.path("/server/sum").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 2).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SUM",status,msstring);
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/sumall").request().header("pos", 2).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SUMALL",status,msstring);
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/mult").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 4).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"MULT",status,msstring);
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/multall").request().header("pos", 4).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"MULTALL",status,msstring);
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/searcheq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEQ",status,msstring);
+			
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchneq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SNEQ",status,msstring);
+			
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchentry").request().async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SE",status,msstring);
+	       
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEOR",status,msstring);
+	        
+	        nanotimeStart = System.nanoTime();
+	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEAND",status,msstring);
+	        
+	        nanotimeStart = System.nanoTime();
+	        target.path("/server/orderls").request().header("pos", 0).async().get();
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"ORDLS",status,msstring);
+	      
+	        nanotimeStart = System.nanoTime();
+	        target.path("/server/ordersl").request().header("pos", 0).async().get();
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"ORDSL",status,msstring);
+	        
+	        value = target.path("/server/searcheqint").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SEQINT",status,msstring);
+	        
+	        value = target.path("/server/searchgt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SGT",status,msstring);
+	        
+	        value = target.path("/server/searchgteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SGTEQ",status,msstring);
+	        
+	        value = target.path("/server/searchlt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SLT",status,msstring);
+	      
+	        value = target.path("/server/searchlteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SLTEQ",status,msstring);
+	        /*  */
+		}
+		fw.write(sb.toString());
+		fw.close();
+	}
+	
+	public void benchmarkE2E4() throws Exception{
+		/*
+		target.path("/server/putset")
+		.request().header("key", "sbp").async().
+		post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+		
+		target.path("/server/putset")
+		.request().header("key", "dg").async().
+		post(Entity.entity(new Entry(2,"three",4,"five",6,"seven"), MediaType.APPLICATION_JSON));
+		
+		target.path("/server/putset")
+		.request().header("key", "csd").async().
+		post(Entity.entity(new Entry(20,"sd",3,"asd",5,"csd"), MediaType.APPLICATION_JSON));
+		*/
+		ArrayList<Entry> entries = new ArrayList<Entry>();
+		entries.add(new Entry(1,"two",3,"four",5,"six"));
+		entries.add(new Entry(2,"three",4,"five",6,"seven"));
+		entries.add(new Entry(20,"sd",3,"asd",5,"csd"));
+		JSONObject jsonObj = new JSONObject();
+		JSONObject jsonObj2 = new JSONObject();
+		jsonObj.append("element", "2");
+		jsonObj2.append("element", "four");
+		
+		fw = new FileWriter(resFile,true); //the true is to append to the end of file
+		sb = new StringBuilder();//clears the previous stringbuilder
+		Future<Response> value;
+		long nanotimeStart,nanotimeEnd ;
+		float ms;
+		String msstring;
+		int status;
+		String benchmark = "E2";
+		if(activeEncryption)
+			benchmark = "E4";
+		
+		//10 search ops
+		for(int i = 0 ; i < 100 ; i ++){
+			
+			nanotimeStart = System.nanoTime();
 			value = target.path("/server/searcheq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -405,5 +570,4 @@ public class Benchmarks {
 		fw.write(sb.toString());
 		fw.close();
 	}
-	
 }

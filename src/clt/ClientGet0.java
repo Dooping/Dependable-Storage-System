@@ -420,7 +420,7 @@ public class ClientGet0 {
 					case "4":    test.benchmark4(); break;
 					case "5":	test.benchmark5(); break;
 					case "6":    test.benchmarkE1E3(); break;
-					case "7":break;
+					case "7":    test.benchmarkE2E4(); break;
 					}
 				}
 				break;
