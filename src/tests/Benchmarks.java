@@ -327,38 +327,6 @@ public class Benchmarks {
 		for(int i = 0 ; i < 10 ; i ++){
 			
 			nanotimeStart = System.nanoTime();
-			value = target.path("/server/sum").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 2).async().get();
-			status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SUM",status,msstring);
-			
-			nanotimeStart = System.nanoTime();
-			value = target.path("/server/sumall").request().header("pos", 2).async().get();
-			status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SUMALL",status,msstring);
-			
-			nanotimeStart = System.nanoTime();
-			value = target.path("/server/mult").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 4).async().get();
-			status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"MULT",status,msstring);
-			
-			nanotimeStart = System.nanoTime();
-			value = target.path("/server/multall").request().header("pos", 4).async().get();
-			status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"MULTALL",status,msstring);
-			
-			nanotimeStart = System.nanoTime();
 			value = target.path("/server/searcheq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -488,9 +456,41 @@ public class Benchmarks {
 		if(activeEncryption)
 			benchmark = "E4";
 		
-		//10 search ops
+		//100 search ops
 		for(int i = 0 ; i < 100 ; i ++){
 			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/sum").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 2).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SUM",status,msstring);
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/sumall").request().header("pos", 2).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"SUMALL",status,msstring);
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/mult").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 4).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"MULT",status,msstring);
+			
+			nanotimeStart = System.nanoTime();
+			value = target.path("/server/multall").request().header("pos", 4).async().get();
+			status = value.get().getStatus();
+	        nanotimeEnd = System.nanoTime();
+	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
+	        msstring = String.format("%.7f",ms).replace(',','.');
+	        appendStringBuilder(benchmark,"MULTALL",status,msstring);
+
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/searcheq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
 			status = value.get().getStatus();

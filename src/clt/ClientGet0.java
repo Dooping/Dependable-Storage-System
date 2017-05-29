@@ -105,6 +105,7 @@ public class ClientGet0 {
 		//process the SERVER onfiguration returned from the server
 		String split[] = configString.split("#"); //[types]#[ops]#Encrypted:[true/false]
 		String types[] = split[0].split(" "); //[types]
+		String ops[] = split[1].split(" ");
 		String isEncrypted[] = split[2].split(":"); //Encrypted:[true/false]
 		Object allowedTypes[] = new Object[types.length];
 		for(int i = 0 ; i < types.length ; i++){
@@ -140,7 +141,6 @@ public class ClientGet0 {
 					else
 						n.addCustomElem(parts[i]); 
 				}
-				
 				Future<Response> key = target.path("/server/putset")
 						.request().header("key", parts[0]).async().post(Entity.entity(n, MediaType.APPLICATION_JSON));
 				System.out.println("Call: /server/putset ; Response: "+ key.get().readEntity(Long.class));
@@ -217,53 +217,75 @@ public class ClientGet0 {
 						String resSum = br.readLine();
 						String partsSum[] = resSum.split(" ");
 						int posSum = Integer.parseInt(partsSum[2]);
-						Future<Response> sum = target.path("/server/sum").request().header("keyOne",partsSum[0]).header("keyTwo", partsSum[1]).header("pos", posSum).async().get();
-						System.out.println("Call: /server/sum ; Response: " + sum.get().readEntity(String.class));
+						if(ops[posSum].equals("+")){
+							Future<Response> sum = target.path("/server/sum").request().header("keyOne",partsSum[0]).header("keyTwo", partsSum[1]).header("pos", posSum).async().get();
+							System.out.println("Call: /server/sum ; Response: " + sum.get().readEntity(String.class));
+						}else{
+							System.err.println("Sum not allowed in position: "+posSum+ ".  Allowed operation on this position:  "+ops[posSum]);
+						}
 						break;
 					case "2":
 						System.out.println("[pos]");
 						int posSumall = Integer.parseInt(br.readLine());
-						Future<Response> sumall = target.path("/server/sumall").request().header("pos", posSumall).async().get();
-						System.out.println("Call: /server/sumall ; Response: " + sumall.get().readEntity(String.class));
+						if(ops[posSumall].equals("+")){
+							Future<Response> sumall = target.path("/server/sumall").request().header("pos", posSumall).async().get();
+							System.out.println("Call: /server/sumall ; Response: " + sumall.get().readEntity(String.class));
+						}else{
+							System.err.println("Sumall not allowed in position: "+posSumall+ ".  Allowed operation on this position:  "+ops[posSumall]);
+						}
 						break;
 					case "3":
 						System.out.println("[key1] [key2] [pos]");
 						String resMult = br.readLine();
 						String partsMult[] = resMult.split(" ");
 						int posMult = Integer.parseInt(partsMult[2]);
+						if(ops[posMult].equals("&")){
 						Future<Response> mult = target.path("/server/mult").request().header("keyOne",partsMult[0]).header("keyTwo", partsMult[1]).header("pos", posMult).async().get();
 						System.out.println("Call: /server/mult ; Response: " + mult.get().readEntity(String.class));
-						break;
+						}else{
+							System.err.println("Mult not allowed in position: "+posMult+ ".  Allowed operation on this position: "+ops[posMult]);
+						}break;
 					case "4":
 						System.out.println("[pos]");
 						int posMultall = Integer.parseInt(br.readLine());
-						Future<Response> multall = target.path("/server/multall").request().header("pos", posMultall).async().get();
-						System.out.println("Call: /server/multall ; Response: " + multall.get().readEntity(String.class));
-						break;
+						if(ops[posMultall].equals("&")){
+							Future<Response> multall = target.path("/server/multall").request().header("pos", posMultall).async().get();
+							System.out.println("Call: /server/multall ; Response: " + multall.get().readEntity(String.class));
+						}else{
+							System.err.println("Multall not allowed in position: "+posMultall+ ".  Allowed operation on this position: "+ops[posMultall]);
+						}break;
 					case "5":
 						System.out.println("[pos] [val]");
 						String resSearcheq = br.readLine();
 						String partsSearcheq[] = resSearcheq.split(" ");
 						int posSearcheq = Integer.parseInt(partsSearcheq[0]);
-						JSONObject jsobj = new JSONObject();
-						jsobj.append("element", partsSearcheq[1]);
-						Future<Response> searceq = target.path("/server/searcheq").request().header("pos", posSearcheq).async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlist = searceq.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlist)
-							System.out.println("Call: /server/searcheq ; Response: " + seqentry.toString());
+						if(ops[posSearcheq].equals("=")){
+							JSONObject jsobj = new JSONObject();
+							jsobj.append("element", partsSearcheq[1]);
+							Future<Response> searceq = target.path("/server/searcheq").request().header("pos", posSearcheq).async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
+							List<Entry> seqlist = searceq.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlist)
+								System.out.println("Call: /server/searcheq ; Response: " + seqentry.toString());
+						}else{
+							System.err.println("Searcheq not allowed in position: "+posSearcheq+ ".  Allowed operation on this position: "+ops[posSearcheq]);
+						}
+						
 						break;
 					case "6":
 						System.out.println("[pos] [val]");
 						String resSearchneq = br.readLine();
 						String partsSearchneq[] = resSearchneq.split(" ");
 						int posSearchneq = Integer.parseInt(partsSearchneq[0]);
+						if(ops[posSearchneq].equals("=")){
 						JSONObject jsobj2 = new JSONObject();
 						jsobj2.append("element", partsSearchneq[1]);
 						Future<Response> searchneq = target.path("/server/searchneq").request().header("pos", posSearchneq).async().post(Entity.entity(jsobj2.toString(),MediaType.APPLICATION_JSON));
 						List<Entry> seqlist2 = searchneq.get().readEntity(new GenericType<List<Entry>>(){});
 						for(Entry seqentry : seqlist2)
 							System.out.println("Call: /server/searchneq ; Response: " + seqentry.toString());
-						break;
+						}else{
+							System.err.println("Searchneq not allowed in position: "+posSearchneq+ ".  Allowed operation on this position: "+ops[posSearchneq]);
+						}break;
 					case "7":
 						System.out.println("[entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
 						String res7 = br.readLine();
@@ -328,81 +350,101 @@ public class ClientGet0 {
 					case "10":
 						System.out.println("[pos]");
 						int posOrderls = Integer.parseInt(br.readLine());
-						Future<Response> orderls = target.path("/server/orderls").request().header("pos", posOrderls).async().get();
-						List<Entry> seqlist6 = orderls.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlist6)
-							System.out.println("Call: /server/orderls ; Response: " + seqentry.toString());
-						break;
+						if(ops[posOrderls].equals("<") || ops[posOrderls].equals("<=") || ops[posOrderls].equals(">") || ops[posOrderls].equals(">=")){
+							Future<Response> orderls = target.path("/server/orderls").request().header("pos", posOrderls).async().get();
+							List<Entry> seqlist6 = orderls.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlist6)
+								System.out.println("Call: /server/orderls ; Response: " + seqentry.toString());
+						}else{
+							System.err.println("Orderls not allowed in position: "+posOrderls+ ".  Allowed operation on this position: "+ops[posOrderls]);
+						}break;
 					case "11":
 						System.out.println("[pos]");
 						int posOrdersl = Integer.parseInt(br.readLine());
-						Future<Response> ordersl = target.path("/server/ordersl").request().header("pos", posOrdersl).async().get();
-						List<Entry> seqlist7 = ordersl.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlist7)
-							System.out.println("Call: /server/ordersl ; Response: " + seqentry.toString());
-						break;
+						if(ops[posOrdersl].equals("<") || ops[posOrdersl].equals("<=") || ops[posOrdersl].equals(">") || ops[posOrdersl].equals(">=")){
+							Future<Response> ordersl = target.path("/server/ordersl").request().header("pos", posOrdersl).async().get();
+							List<Entry> seqlist7 = ordersl.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlist7)
+								System.out.println("Call: /server/ordersl ; Response: " + seqentry.toString());
+						}else{
+							System.err.println("Ordersl not allowed in position: "+posOrdersl+ ".  Allowed operation on this position: "+ops[posOrdersl]);
+						}break;
 					case "12":
 						System.out.println("[pos] [val]");
 						String resSearcheqint = br.readLine();
 						String partsSearcheqint[] = resSearcheqint.split(" ");
 						int posSearcheqint = Integer.parseInt(partsSearcheqint[0]);
-						JSONObject jsoneqint = new JSONObject();
-						jsoneqint.append("element", partsSearcheqint[1]);
-						Future<Response> searcheqint = target.path("/server/searcheqint").request().header("pos", posSearcheqint).async().post(Entity.entity(jsoneqint.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlisteqint = searcheqint.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlisteqint)
-							System.out.println("Call: /server/searcheqint ; Response: " + seqentry.toString());
-						break;
+						if(ops[posSearcheqint].equals("<") || ops[posSearcheqint].equals("<=") || ops[posSearcheqint].equals(">") || ops[posSearcheqint].equals(">=")){
+							JSONObject jsoneqint = new JSONObject();
+							jsoneqint.append("element", partsSearcheqint[1]);
+							Future<Response> searcheqint = target.path("/server/searcheqint").request().header("pos", posSearcheqint).async().post(Entity.entity(jsoneqint.toString(),MediaType.APPLICATION_JSON));
+							List<Entry> seqlisteqint = searcheqint.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlisteqint)
+								System.out.println("Call: /server/searcheqint ; Response: " + seqentry.toString());
+					}else{
+						System.err.println("Searcheqint not allowed in position: "+posSearcheqint+ ".  Allowed operation on this position: "+ops[posSearcheqint]);
+					}break;
 					case "13":
 						System.out.println("[pos] [val]");
 						String resSearchgt = br.readLine();
 						String partsSearchgt[] = resSearchgt.split(" ");
 						int posSearchgt = Integer.parseInt(partsSearchgt[0]);
-						JSONObject jsongt = new JSONObject();
-						jsongt.append("element", partsSearchgt[1]);
-						Future<Response> searchgt = target.path("/server/searchgt").request().header("pos", posSearchgt).async().post(Entity.entity(jsongt.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlistgt = searchgt.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlistgt)
-							System.out.println("Call: /server/searchgt ; Response: " + seqentry.toString());
-						break;
+						if(ops[posSearchgt].equals("<") || ops[posSearchgt].equals("<=") || ops[posSearchgt].equals(">") || ops[posSearchgt].equals(">=")){
+							JSONObject jsongt = new JSONObject();
+							jsongt.append("element", partsSearchgt[1]);
+							Future<Response> searchgt = target.path("/server/searchgt").request().header("pos", posSearchgt).async().post(Entity.entity(jsongt.toString(),MediaType.APPLICATION_JSON));
+							List<Entry> seqlistgt = searchgt.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlistgt)
+								System.out.println("Call: /server/searchgt ; Response: " + seqentry.toString());
+					}else{
+						System.err.println("Searchgt not allowed in position: "+posSearchgt+ ".  Allowed operation on this position: "+ops[posSearchgt]);
+					}break;
 					case "14":
 						System.out.println("[pos] [val]");
 						String resSearchgteq = br.readLine();
 						String partsSearchgteq[] = resSearchgteq.split(" ");
 						int posSearchgteq = Integer.parseInt(partsSearchgteq[0]);
-						JSONObject jsongteq = new JSONObject();
-						jsongteq.append("element", partsSearchgteq[1]);
-						Future<Response> searchgteq = target.path("/server/searchgteq").request().header("pos", posSearchgteq).async().post(Entity.entity(jsongteq.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlistgteq = searchgteq.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlistgteq)
-							System.out.println("Call: /server/searchgteq ; Response: " + seqentry.toString());
-						break;
+						if(ops[posSearchgteq].equals("<") || ops[posSearchgteq].equals("<=") || ops[posSearchgteq].equals(">") || ops[posSearchgteq].equals(">=")){
+							JSONObject jsongteq = new JSONObject();
+							jsongteq.append("element", partsSearchgteq[1]);
+							Future<Response> searchgteq = target.path("/server/searchgteq").request().header("pos", posSearchgteq).async().post(Entity.entity(jsongteq.toString(),MediaType.APPLICATION_JSON));
+							List<Entry> seqlistgteq = searchgteq.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlistgteq)
+								System.out.println("Call: /server/searchgteq ; Response: " + seqentry.toString());
+						}else{
+							System.err.println("Searchgteq not allowed in position: "+posSearchgteq+ ".  Allowed operation on this position: "+ops[posSearchgteq]);
+						}break;
 					case "15":
 						System.out.println("[pos] [val]");
 						String resSearchlt = br.readLine();
 						String partsSearchlt[] = resSearchlt.split(" ");
 						int posSearchlt = Integer.parseInt(partsSearchlt[0]);
-						JSONObject jsonlt = new JSONObject();
-						jsonlt.append("element", partsSearchlt[1]);
-						Future<Response> searchlt = target.path("/server/searchlt").request().header("pos", posSearchlt).async().post(Entity.entity(jsonlt.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlistlt = searchlt.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlistlt)
-							System.out.println("Call: /server/searchlt ; Response: " + seqentry.toString());
-						break;
+							if(ops[posSearchlt].equals("<") || ops[posSearchlt].equals("<=") || ops[posSearchlt].equals(">") || ops[posSearchlt].equals(">=")){
+							JSONObject jsonlt = new JSONObject();
+							jsonlt.append("element", partsSearchlt[1]);
+							Future<Response> searchlt = target.path("/server/searchlt").request().header("pos", posSearchlt).async().post(Entity.entity(jsonlt.toString(),MediaType.APPLICATION_JSON));
+							List<Entry> seqlistlt = searchlt.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlistlt)
+								System.out.println("Call: /server/searchlt ; Response: " + seqentry.toString());
+						}else{
+							System.err.println("Searchlt not allowed in position: "+posSearchlt+ ".  Allowed operation on this position: "+ops[posSearchlt]);
+						}break;
 					case "16":
 						System.out.println("[pos] [val]");
 						String resSearchlteq = br.readLine();
 						String partsSearchlteq[] = resSearchlteq.split(" ");
 						int posSearchlteq = Integer.parseInt(partsSearchlteq[0]);
-						JSONObject jsonlteq = new JSONObject();
-						jsonlteq.append("element", partsSearchlteq[1]);
-						Future<Response> searchlteq = target.path("/server/searchlteq").request().header("pos", posSearchlteq).async().post(Entity.entity(jsonlteq.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlistlteq = searchlteq.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlistlteq)
-							System.out.println("Call: /server/searchlteq ; Response: " + seqentry.toString());
-						break;
+						if(ops[posSearchlteq].equals("<") || ops[posSearchlteq].equals("<=") || ops[posSearchlteq].equals(">") || ops[posSearchlteq].equals(">=")){
+							JSONObject jsonlteq = new JSONObject();
+							jsonlteq.append("element", partsSearchlteq[1]);
+							Future<Response> searchlteq = target.path("/server/searchlteq").request().header("pos", posSearchlteq).async().post(Entity.entity(jsonlteq.toString(),MediaType.APPLICATION_JSON));
+							List<Entry> seqlistlteq = searchlteq.get().readEntity(new GenericType<List<Entry>>(){});
+							for(Entry seqentry : seqlistlteq)
+								System.out.println("Call: /server/searchlteq ; Response: " + seqentry.toString());
+					}else{
+							System.err.println("Searchlteq not allowed in position: "+posSearchlteq+ ".  Allowed operation on this position: "+ops[posSearchlteq]);
+						}break;
 					}
-					
 				}
 				break;
 			case "9"://Test #8 [BENCHMARKS]
