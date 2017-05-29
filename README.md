@@ -1,5 +1,5 @@
 
-# CSD-TP1
+# CSD-TP2
 ## Arguments
 
 ### SSLRestServer0
@@ -7,6 +7,7 @@
  -bz,--byzantine <arg>   number of replicas that are byzantine
  -ch,--chance <arg>      probability of crashing/byzantine error
  -cr,--crash <arg>       number of replicas to crash
+ -e,--encrypt            use homomorfic encryption
  -f,--fault <arg>        fault detection server's address
  -k,--keystore <arg>     keystore path
  -n,--number <arg>       number of replicas to spawn
@@ -26,7 +27,7 @@
 
 - Create the Fault Detection Server e.g. srv.SSLRestServer0 -t fault
 - Create Spawners with replicas e.g. srv.SSLRestServer0 -t spawner1 -n 4 -s 1 -f akka.ssl.tcp://FaultDetection@192.168.99.1:2563/user/faultDetection
-- Create a Proxy e.g. srv.SSLRestServer0 -t proxy -k ./server.jks -f akka.ssl.tcp://FaultDetection@192.168.99.1:2563/user/faultDetection -bz 1 -ch 10
+- Create a Proxy e.g. srv.SSLRestServer0 -t proxy -k ./server.jks -e -f akka.ssl.tcp://FaultDetection@192.168.99.1:2563/user/faultDetection -bz 1 -ch 10
 - Create a Client to send requests or run benchmarks e.g. clt.ClientGet0 -k ./client.jks -h 192.168.99.1
 - The Client will immeadiately receive the allowed Entry configuration from the Server as soon as the Client makes a connection.
 
