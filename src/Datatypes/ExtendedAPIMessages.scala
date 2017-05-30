@@ -8,7 +8,7 @@ case class SumAll(nonce: Long, pos: Int, encrypted: Boolean, nsquare: BigInteger
 case class SumMultAllResult(nonce: Long, res: BigInteger)
 case class MultAll(nonce: Long, pos: Int, encrypted: Boolean, key: RSAPublicKey)
 
-case class EntrySet(nonce: Long, set: java.util.List[Entry])
+case class EntrySet(nonce: Long, set: java.util.List[String])
 
 case class SearchEq(nonce: Long, pos: Int, value: String)
 case class SearchNEq(nonce: Long, pos: Int, value: String)

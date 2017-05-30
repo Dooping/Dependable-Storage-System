@@ -158,51 +158,51 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
       sendMessage(sender,SumMultAllResult(nonce, res))
     }
     case SearchEq(nonce, pos, value) => {
-      var set =  map.collect{case e if HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value) => e._2._1}
+      var set =  map.collect{case e if HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value) => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchNEq(nonce, pos, value) => {
-      var set =  map.collect{case e if !HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value) => e._2._1}
+      var set =  map.collect{case e if !HomoDet.compare(e._2._1.getElem(pos).asInstanceOf[String], value) => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchEntry(nonce, value, encrypted) => {
-      var set =  map.collect{case e if value.search(e._2._1, encrypted) => e._2._1}
+      var set =  map.collect{case e if value.search(e._2._1, encrypted) => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchEntryOr(nonce, value, encrypted) => {
-      var set =  map.collect{case e if value.asScala.exists(p=>p.search(e._2._1, encrypted)) => e._2._1}
+      var set =  map.collect{case e if value.asScala.exists(p=>p.search(e._2._1, encrypted)) => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchEntryAnd(nonce, value, encrypted) => {
-      var set =  map.collect{case e if value.asScala.forall(p=>p.search(e._2._1, encrypted)) => e._2._1}
+      var set =  map.collect{case e if value.asScala.forall(p=>p.search(e._2._1, encrypted)) => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case OrderLS(nonce, pos) => {
-      var set = map.map(_._2._1).toBuffer.sortWith((e,r) => e.getElem(pos).asInstanceOf[Long]<r.getElem(pos).asInstanceOf[Long])
+      var set = map.toBuffer.sortWith((e,r) => e._2._1.getElem(pos).asInstanceOf[Long]<r._2._1.getElem(pos).asInstanceOf[Long]).map(_._1)
       sendMessage(sender,EntrySet(nonce, set.asJava))
     }
     case OrderSL(nonce, pos) => {
-      var set = map.map(_._2._1).toBuffer.sortWith((e,r) => e.getElem(pos).asInstanceOf[Long]>r.getElem(pos).asInstanceOf[Long])
+      var set = map.toBuffer.sortWith((e,r) => e._2._1.getElem(pos).asInstanceOf[Long]>r._2._1.getElem(pos).asInstanceOf[Long]).map(_._1)
       sendMessage(sender,EntrySet(nonce, set.asJava))
     }
     case SearchEqInt (nonce, pos, value) => {
-      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]==value => e._2._1}
+      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]==value => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchGt (nonce, pos, value) => {
-      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]>value => e._2._1}
+      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]>value => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchGtEq (nonce, pos, value) => {
-      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]>=value => e._2._1}
+      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]>=value => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchLt (nonce, pos, value) => {
-      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]<value => e._2._1}
+      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]<value => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case SearchLtEq (nonce, pos, value) => {
-      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]<=value => e._2._1}
+      var set =  map.collect{case e if e._2._1.getElem(pos).asInstanceOf[Long]<=value => e._1}
       sendMessage(sender,EntrySet(nonce, set.toBuffer.asJava))
     }
     case _ => println("replica recebeu mensagem diferente")
@@ -223,7 +223,7 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
               else {
                 val number = r.nextInt(10)
                 for(i <- 0 until number)
-                  set.add(new Entry())
+                  set.add(Stream.continually(util.Random.nextPrintableChar) take 5 mkString)
               }
               target ! message
             }

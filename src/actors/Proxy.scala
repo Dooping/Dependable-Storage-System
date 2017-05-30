@@ -35,11 +35,11 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
   
   class SetQuorumTimeout(quorum: Set[Any], replicas: List[ActorRef]) extends Runnable {
     def run = {
-      val distinct = quorum.map(_.asInstanceOf[(ActorRef,java.util.List[Entry])]._2).toSet
+      val distinct = quorum.map(_.asInstanceOf[(ActorRef,java.util.List[String])]._2).toSet
       val sizes = Buffer.empty[Any]
-      distinct.foreach(e => sizes += ((e,quorum.count(_.asInstanceOf[(ActorRef, java.util.List[Entry])]._2 == e))))
-      val maxQuorum = sizes.maxBy(_.asInstanceOf[(java.util.List[Entry],Int)]._2)
-      val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, java.util.List[Entry])]._1 == r && p.asInstanceOf[(ActorRef, java.util.List[Entry])]._2.equals(maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._1)))
+      distinct.foreach(e => sizes += ((e,quorum.count(_.asInstanceOf[(ActorRef, java.util.List[String])]._2 == e))))
+      val maxQuorum = sizes.maxBy(_.asInstanceOf[(java.util.List[String],Int)]._2)
+      val errors = replicas.filterNot(r => quorum.exists(p => p.asInstanceOf[(ActorRef, java.util.List[String])]._1 == r && p.asInstanceOf[(ActorRef, java.util.List[String])]._2.equals(maxQuorum.asInstanceOf[(java.util.List[String],Int)]._1)))
       errors.foreach(e => faultServer ! Vote(e))
       if(errors.size>0)
         println("Failure candidates: "+errors)
@@ -301,11 +301,11 @@ class Proxy(replicasToCrash: Int, byzantineReplicas: Int, chance: Int, minQuorum
       val request = requests(nonce)
       request.ackQuorum += tuple
       if (request.ackQuorum.size==minQuorum){
-        val distinct = request.ackQuorum.map(_.asInstanceOf[(ActorRef,java.util.List[Entry])]._2).toSet
+        val distinct = request.ackQuorum.map(_.asInstanceOf[(ActorRef,java.util.List[String])]._2).toSet
         val sizes = Buffer.empty[Any]
-        distinct.foreach(e => sizes += ((e,request.ackQuorum.count(_.asInstanceOf[(ActorRef, java.util.List[Entry])]._2 == e))))
-        val maxQuorum = sizes.maxBy(_.asInstanceOf[(java.util.List[Entry],Int)]._2)
-        request.sender ! EntrySet(nonce, maxQuorum.asInstanceOf[(java.util.List[Entry],Int)]._1)
+        distinct.foreach(e => sizes += ((e,request.ackQuorum.count(_.asInstanceOf[(ActorRef, java.util.List[String])]._2 == e))))
+        val maxQuorum = sizes.maxBy(_.asInstanceOf[(java.util.List[String],Int)]._2)
+        request.sender ! EntrySet(nonce, maxQuorum.asInstanceOf[(java.util.List[String],Int)]._1)
       }
     }
     case _ => println("recebeu mensagem diferente")
