@@ -153,7 +153,7 @@ class Replica(active: Boolean, faultServerAddress: String) extends Actor{
         if(encrypted)
           res = HomoMult.multiply(res, second._2._1.getElem(pos).asInstanceOf[BigInteger], key)
         else
-          res.add(second._2._1.getElem(pos).asInstanceOf[BigInteger])
+          res.multiply(second._2._1.getElem(pos).asInstanceOf[BigInteger])
       }
       sendMessage(sender,SumMultAllResult(nonce, res))
     }
