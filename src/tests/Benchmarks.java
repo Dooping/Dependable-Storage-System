@@ -20,14 +20,17 @@ import org.json.JSONObject;
 import Datatypes.Entry;
 
 public class Benchmarks {
+	static final String[] STRINGS = new String[]{"one","two","three","four","five","six", "seven", "eight"};
 
 	WebTarget target;
 	File resFile;
 	FileWriter fw;
 	StringBuilder sb;
 	boolean activeEncryption;
+	Object[] config;
 	
-	public Benchmarks(WebTarget target,boolean activeEncryption) throws Exception{
+	public Benchmarks(WebTarget target,boolean activeEncryption, Object[] config) throws Exception{
+		
 		this.target = target;
 		if(activeEncryption)
 			resFile = new File("resultsEncrypted.csv");
@@ -42,6 +45,7 @@ public class Benchmarks {
 		fw.close();
 		
 		this.activeEncryption = activeEncryption;
+		this.config = config;
 	
 	}
 	
@@ -61,7 +65,7 @@ public class Benchmarks {
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey"+i).async().
-					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+					post(Entity.entity(Entry.randomEntry(config, STRINGS, 10), MediaType.APPLICATION_JSON));
 			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -117,7 +121,7 @@ public class Benchmarks {
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey"+i).async().
-					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+					post(Entity.entity(Entry.randomEntry(config, STRINGS, 10), MediaType.APPLICATION_JSON));
 			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -204,7 +208,7 @@ public class Benchmarks {
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey"+i).async().
-					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));			
+					post(Entity.entity(Entry.randomEntry(config, STRINGS, 10), MediaType.APPLICATION_JSON));			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;

@@ -3,6 +3,8 @@ package Datatypes;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
 import hlib.hj.mlib.HomoSearch;
 
 public class Entry implements Serializable{
@@ -75,6 +77,18 @@ public class Entry implements Serializable{
 					if(((String)values.get(i)).contains((String)other.getElem(i)))
 						return true;
 		return false;
+	}
+	
+	public static Entry randomEntry(Object[] config, String[] strings, int maxInt){
+		Entry res = new Entry();
+		Random r = new Random();
+		int l = config.length;
+		for(Object o: config)
+			if(o instanceof String)
+				res.addCustomElem(strings[r.nextInt(l)]);
+			else
+				res.addCustomElem(r.nextInt(maxInt));
+		return res;
 	}
 
 }
