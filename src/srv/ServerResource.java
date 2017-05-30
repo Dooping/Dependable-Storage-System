@@ -440,7 +440,6 @@ public class ServerResource {
 		                		asyncResponse.resume(Response.ok().entity(truePaiVal.toString()).build());
 	                		}else{
 	                			//deliver as it is (uncrypted)
-	                			System.out.println("HERE:"+result.toString());
 	                			asyncResponse.resume(Response.ok().entity(res.res().toString()).build());
 	                		}
 	                	}
@@ -553,7 +552,6 @@ public class ServerResource {
 		            		BigInteger big = res.res();
 		                	RSAPrivateKey rsaprivKey =(RSAPrivateKey) conf.keys.get(pos).getKey(1);
 		                	BigInteger trueRSAVal = HomoMult.decrypt(rsaprivKey, big);
-		                	System.out.println("[MULTALL]:"+trueRSAVal.toString());
 		                	asyncResponse.resume(Response.ok().entity(trueRSAVal.toString()).build());
 	            		}else{
 	            			//deliver as it is ( uncrypted )
@@ -718,8 +716,6 @@ public class ServerResource {
 		public void searchEntryOR(List<Entry> entries, @Suspended final AsyncResponse asyncResponse){
 			List<Entry> auxEntries = new ArrayList<Entry>();
 			boolean[] searchables = conf.getOpIndex("%");
-			System.out.println(searchables);
-			System.out.println(entries.size());
 			for(int i = 0 ; i < entries.size() ; i++){
 				Entry n = entries.get(i);
 				Entry specialEntry = new Entry();
@@ -778,8 +774,6 @@ public class ServerResource {
 		public void searchEntryAND(List<Entry> entries, @Suspended final AsyncResponse asyncResponse){
 			List<Entry> auxEntries = new ArrayList<Entry>();
 			boolean[] searchables = conf.getOpIndex("%");
-			System.out.println(searchables);
-			System.out.println(entries.size());
 			for(int i = 0 ; i < entries.size() ; i++){
 				Entry n = entries.get(i);
 				Entry specialEntry = new Entry();
