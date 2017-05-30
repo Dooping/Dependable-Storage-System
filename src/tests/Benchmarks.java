@@ -2,34 +2,31 @@ package tests;
 
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 import java.util.concurrent.Future;
-
+import java.util.concurrent.ThreadLocalRandom;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import org.json.JSONObject;
-
 import Datatypes.Entry;
 
 public class Benchmarks {
 	static final String[] STRINGS = new String[]{"one","two","three","four","five","six", "seven", "eight"};
-
+	int intVals[] = {1,2,3,4,5,6,7,8,9};
+	int maxNumberEntries = 3; //max number of entries to generate randomly
 	WebTarget target;
 	File resFile;
 	FileWriter fw;
 	StringBuilder sb;
 	boolean activeEncryption;
-	Object[] config;
+	Object[] types;
+	String[] ops;
 	
-	public Benchmarks(WebTarget target,boolean activeEncryption, Object[] config) throws Exception{
+	public Benchmarks(WebTarget target,boolean activeEncryption, Object[] types, String[] ops) throws Exception{
 		
 		this.target = target;
 		if(activeEncryption)
@@ -45,8 +42,8 @@ public class Benchmarks {
 		fw.close();
 		
 		this.activeEncryption = activeEncryption;
-		this.config = config;
-	
+		this.types = types;
+		this.ops = ops;
 	}
 	
 	public void appendStringBuilder(String benchmark, String op, int status,String time){
@@ -62,18 +59,18 @@ public class Benchmarks {
 		long nanotimeStart,nanotimeEnd;
 		int status;
 		for(int i = 0 ; i < 100 ; i ++){
+			System.out.print(".");
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey"+i).async().
-					post(Entity.entity(Entry.randomEntry(config, STRINGS, 10), MediaType.APPLICATION_JSON));
-			
+					post(Entity.entity(Entry.randomEntry(types, STRINGS, 10), MediaType.APPLICATION_JSON));
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        String msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("1","PUT",status,msstring);
 		}
-		
+		System.out.println();
 		fw.write(sb.toString());
 		fw.close();
 	}
@@ -86,6 +83,7 @@ public class Benchmarks {
 		long nanotimeStart,nanotimeEnd ;
 		int status;
 		for(int i = 0 ; i < 100 ; i ++){
+			System.out.println(".");
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/getset")
 					.request()
@@ -100,7 +98,7 @@ public class Benchmarks {
 	        String msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("2","GET",status,msstring);
 		}
-		
+		System.out.println();
 		fw.write(sb.toString());
 		fw.close();
 		
@@ -116,12 +114,12 @@ public class Benchmarks {
 		
 		//50 PUTSET & 50 GESET ALTER
 		for(int i = 0 ; i < 50 ; i ++){
-			
+			System.out.println(".");
 			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey"+i).async().
-					post(Entity.entity(Entry.randomEntry(config, STRINGS, 10), MediaType.APPLICATION_JSON));
+					post(Entity.entity(Entry.randomEntry(types, STRINGS, 10), MediaType.APPLICATION_JSON));
 			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -144,7 +142,7 @@ public class Benchmarks {
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("3","GET",status,msstring);
 		}
-		
+		System.out.println();
 		fw.write(sb.toString());
 		fw.close();
 		
@@ -160,7 +158,7 @@ public class Benchmarks {
 		
 		//50 ADDELEM & 50 READELEM ALTER
 		for(int i = 0 ; i < 50 ; i ++){
-			
+			System.out.println(".");
 			//ADDELEM
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/addelem")
@@ -186,7 +184,7 @@ public class Benchmarks {
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder("4","READ",status,msstring);
 		}
-		
+		System.out.println();
 		fw.write(sb.toString());
 		fw.close();
 		
@@ -203,12 +201,12 @@ public class Benchmarks {
 		
 		//10 PUTSETS 10 GETSETS 10 ADDELEMENTS 10 WRITEELEMS 10 READELEMS
 		for(int i = 0 ; i < 30 ; i ++){
-			
+			System.out.println(".");
 			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
 					.request().header("key", "mykey"+i).async().
-					post(Entity.entity(Entry.randomEntry(config, STRINGS, 10), MediaType.APPLICATION_JSON));			
+					post(Entity.entity(Entry.randomEntry(types, STRINGS, 10), MediaType.APPLICATION_JSON));			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        float ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -286,35 +284,13 @@ public class Benchmarks {
 	        appendStringBuilder("5","REM",status,msstring);
 	        
 		}
-		
+		System.out.println();
 		fw.write(sb.toString());
 		fw.close();
 		
 	}
 	
 	public void benchmarkE1E3() throws Exception{
-		
-		target.path("/server/putset")
-		.request().header("key", "sbp").async().
-		post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON)).get().getStatus();
-		
-		target.path("/server/putset")
-		.request().header("key", "dg").async().
-		post(Entity.entity(new Entry(2,"three",4,"five",6,"seven"), MediaType.APPLICATION_JSON)).get().getStatus();
-		
-		target.path("/server/putset")
-		.request().header("key", "csd").async().
-		post(Entity.entity(new Entry(20,"sd",3,"asd",5,"csd"), MediaType.APPLICATION_JSON)).get().getStatus();
-		
-		
-		ArrayList<Entry> entries = new ArrayList<Entry>();
-		entries.add(new Entry(1,"two",3,"four",5,"six"));
-		entries.add(new Entry(2,"three",4,"five",6,"seven"));
-		entries.add(new Entry(20,"sd",3,"asd",5,"csd"));
-		JSONObject jsonObj = new JSONObject();
-		JSONObject jsonObj2 = new JSONObject();
-		jsonObj.append("element", "2");
-		jsonObj2.append("element", "four");
 		
 		fw = new FileWriter(resFile,true); //the true is to append to the end of file
 		sb = new StringBuilder();//clears the previous stringbuilder
@@ -326,28 +302,18 @@ public class Benchmarks {
 		String benchmark = "E1";
 		if(activeEncryption)
 			benchmark = "E3";
+			
+		List<Entry> randEntries;
 		
 		//10 search ops
 		for(int i = 0 ; i < 10 ; i ++){
+			System.out.print(".");
 			
-			nanotimeStart = System.nanoTime();
-			value = target.path("/server/searcheq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
-			status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SEQ",status,msstring);
-			
+			randEntries = Entry.generateRandomEntries(types, STRINGS, maxNumberEntries, 10);
+	        int randEntry = ThreadLocalRandom.current().nextInt(0, randEntries.size());
+	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchneq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SNEQ",status,msstring);
-			
-	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentry").request().async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentry").request().async().post(Entity.entity(randEntries.get(randEntry),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -355,7 +321,7 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SE",status,msstring);
 	       
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -363,92 +329,21 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SEOR",status,msstring);
 	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SEAND",status,msstring);
 	        
-	        nanotimeStart = System.nanoTime();
-	        target.path("/server/orderls").request().header("pos", 0).async().get();
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"ORDLS",status,msstring);
-	      
-	        nanotimeStart = System.nanoTime();
-	        target.path("/server/ordersl").request().header("pos", 0).async().get();
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"ORDSL",status,msstring);
-	        
-	        value = target.path("/server/searcheqint").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SEQINT",status,msstring);
-	        
-	        value = target.path("/server/searchgt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SGT",status,msstring);
-	        
-	        value = target.path("/server/searchgteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SGTEQ",status,msstring);
-	        
-	        value = target.path("/server/searchlt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SLT",status,msstring);
-	      
-	        value = target.path("/server/searchlteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
-	        status = value.get().getStatus();
-	        nanotimeEnd = System.nanoTime();
-	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
-	        msstring = String.format("%.7f",ms).replace(',','.');
-	        appendStringBuilder(benchmark,"SLTEQ",status,msstring);
-	        /*  */
 		}
+		System.out.println();
 		fw.write(sb.toString());
 		fw.close();
 	}
 	
 	public void benchmarkE2E4() throws Exception{
-		/*
-		target.path("/server/putset")
-		.request().header("key", "sbp").async().
-		post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
-		
-		target.path("/server/putset")
-		.request().header("key", "dg").async().
-		post(Entity.entity(new Entry(2,"three",4,"five",6,"seven"), MediaType.APPLICATION_JSON));
-		
-		target.path("/server/putset")
-		.request().header("key", "csd").async().
-		post(Entity.entity(new Entry(20,"sd",3,"asd",5,"csd"), MediaType.APPLICATION_JSON));
-		*/
-		ArrayList<Entry> entries = new ArrayList<Entry>();
-		entries.add(new Entry(1,"two",3,"four",5,"six"));
-		entries.add(new Entry(2,"three",4,"five",6,"seven"));
-		entries.add(new Entry(20,"sd",3,"asd",5,"csd"));
-		JSONObject jsonObj = new JSONObject();
-		JSONObject jsonObj2 = new JSONObject();
-		jsonObj.append("element", "2");
-		jsonObj2.append("element", "four");
-		
+	
 		fw = new FileWriter(resFile,true); //the true is to append to the end of file
 		sb = new StringBuilder();//clears the previous stringbuilder
 		Future<Response> value;
@@ -460,11 +355,35 @@ public class Benchmarks {
 		if(activeEncryption)
 			benchmark = "E4";
 		
+		JSONObject jsonObj = new JSONObject();
+		JSONObject jsonObj2 = new JSONObject();
+		List<Entry> randEntries; 
+		boolean[] sums = getOpIndex("+");
+		boolean[] mults = getOpIndex("&");
+		boolean[] searchs = getOpIndex("=");
+		ArrayList<boolean[]> orderBooleans = new ArrayList<boolean[]>();
+		
+		boolean[] opl = getOpIndex("<");
+		boolean[] ople = getOpIndex("<=");
+		boolean[] opg = getOpIndex(">");
+		boolean[] opge = getOpIndex(">=");
+		if(opExists(opl))
+			orderBooleans.add(opl);
+		if(opExists(ople))
+			orderBooleans.add(ople);
+		if(opExists(opg))
+			orderBooleans.add(opg);
+		if(opExists(opge))
+			orderBooleans.add(opge);
+	
 		//100 search ops
-		for(int i = 0 ; i < 100 ; i ++){
+		for(int i = 0 ; i < 99 ; i ++){ //99 , pois quando chegar ao 98 , a keyTwo considera 98 +1 (99) que é a ultima
+			System.out.print(".");
+			randEntries = Entry.generateRandomEntries(types, STRINGS, maxNumberEntries, 10);
+			int randPosSums = randomPosition(sums);
 			
 			nanotimeStart = System.nanoTime();
-			value = target.path("/server/sum").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 2).async().get();
+			value = target.path("/server/sum").request().header("keyOne","mykey"+i).header("keyTwo", "mykey"+(i+1)).header("pos", randPosSums).async().get();
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -472,15 +391,17 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SUM",status,msstring);
 			
 			nanotimeStart = System.nanoTime();
-			value = target.path("/server/sumall").request().header("pos", 2).async().get();
+			value = target.path("/server/sumall").request().header("pos", randPosSums).async().get();
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SUMALL",status,msstring);
 			
+	        int randPosMults = randomPosition(mults);
+	        
 			nanotimeStart = System.nanoTime();
-			value = target.path("/server/mult").request().header("keyOne","sbp").header("keyTwo", "csd").header("pos", 4).async().get();
+			value = target.path("/server/mult").request().header("keyOne","mykey"+i).header("keyTwo", "mykey"+(i+1)).header("pos", randPosMults).async().get();
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -488,15 +409,20 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"MULT",status,msstring);
 			
 			nanotimeStart = System.nanoTime();
-			value = target.path("/server/multall").request().header("pos", 4).async().get();
+			value = target.path("/server/multall").request().header("pos", randPosMults).async().get();
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"MULTALL",status,msstring);
 
+	        int randPosSEQ = randomPosition(searchs);
+	        int randVal = ThreadLocalRandom.current().nextInt(0, STRINGS.length);
+	        jsonObj2 = new JSONObject();
+	        jsonObj2.append("element", STRINGS[randVal]);
+	        
 			nanotimeStart = System.nanoTime();
-			value = target.path("/server/searcheq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
+			value = target.path("/server/searcheq").request().header("pos", randPosSEQ).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -504,15 +430,17 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SEQ",status,msstring);
 			
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchneq").request().header("pos", 3).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchneq").request().header("pos", randPosSEQ).async().post(Entity.entity(jsonObj2.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SNEQ",status,msstring);
 			
+	        int randEntry = ThreadLocalRandom.current().nextInt(0, randEntries.size());
+	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentry").request().async().post(Entity.entity(new Entry(1,"two",3,"four",5,"six"),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentry").request().async().post(Entity.entity(randEntries.get(randEntry),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -520,7 +448,7 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SE",status,msstring);
 	       
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -528,42 +456,49 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SEOR",status,msstring);
 	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SEAND",status,msstring);
 	      
-	        value = target.path("/server/searcheqint").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	      //choose between the available < <= > >= 
+	        int randArray= ThreadLocalRandom.current().nextInt(0, orderBooleans.size());
+	        int ranSEQINT = randomPosition(orderBooleans.get(randArray));
+	        int randVal2 =  ThreadLocalRandom.current().nextInt(0, intVals.length);
+	        jsonObj = new JSONObject();
+	        jsonObj.append("element", Integer.toString(intVals[randVal2]));
+	        
+	        value = target.path("/server/searcheqint").request().header("pos", ranSEQINT).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SEQINT",status,msstring);
 	        
-	        value = target.path("/server/searchgt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchgt").request().header("pos",ranSEQINT).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SGT",status,msstring);
 	        
-	        value = target.path("/server/searchgteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchgteq").request().header("pos", ranSEQINT).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SGTEQ",status,msstring);
 	        
-	        value = target.path("/server/searchlt").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchlt").request().header("pos", ranSEQINT).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SLT",status,msstring);
 	      
-	        value = target.path("/server/searchlteq").request().header("pos", 0).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchlteq").request().header("pos", ranSEQINT).async().post(Entity.entity(jsonObj.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -571,7 +506,51 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SLTEQ",status,msstring);
 	        /*  */
 		}
+		System.out.println();
 		fw.write(sb.toString());
 		fw.close();
 	}
+	
+	/*positions: the positions where a certain operation is allowed to execute
+	 * gets all those "true" positions, and, returns a random number from those true positions
+	 * */
+	public int randomPosition(boolean[] positions){
+		int size = 0;
+		for(boolean b : positions)
+			if(b)
+				size++;
+		int[] auxPositions = new int[size];
+		int counter = 0;
+		for(int i = 0 ; i < positions.length ; i ++)
+			if(positions[i]){
+				auxPositions[counter] = i;
+				counter++;
+			}
+		if(size == 0)
+			return -1;
+		int rand = ThreadLocalRandom.current().nextInt(0, size);
+		return auxPositions[rand];
+	}
+	
+	/*
+	 *  this is used mostly for the order operations ( < <= > >= ) we need to check
+	 *  in what operation should we randomize
+	 * */
+	public boolean opExists(boolean[] pos){
+		for(int i = 0 ; i < ops.length ; i++)
+			if(pos[i])
+				return true;
+		return false;
+	}
+	
+	/*given an operation, returns its position
+	 * */
+	public boolean[] getOpIndex(String op){
+		boolean[] indexs = new boolean[ops.length];
+		for(int i = 0 ; i < ops.length ; i++)
+			if(ops[i].equalsIgnoreCase(op))
+				indexs[i] = true;
+		return indexs;
+	}
+	
 }

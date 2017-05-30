@@ -117,7 +117,7 @@ public class ClientGet0 {
 		boolean activeEncryption = false;
 		if(isEncrypted[1].equalsIgnoreCase("true"))
 			activeEncryption = true;
-		Benchmarks test = new Benchmarks(target,activeEncryption, allowedTypes); // for the benchmarks
+		Benchmarks test = new Benchmarks(target,activeEncryption, allowedTypes,ops); // for the benchmarks
 		
 		configString = configString.replace("#", " ");
 		configString ="Valid Entry: ("+ split[0] + ") Allowed Ops: (" + split[1] + ") " + split[2]; 

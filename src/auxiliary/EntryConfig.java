@@ -67,7 +67,7 @@ public class EntryConfig {
 	
 	public Entry encryptEntry(Entry raw){
 
-		System.out.println("=====[ENCRYPTING]=====");
+		//System.out.println("=====[ENCRYPTING]=====");
 		List<Object> vals = raw.values; //the Entry's raw values
 		List<Object> crypts = new ArrayList<Object>();  //stores each Entry's encripted values
 		int auxInt = 0;
@@ -95,8 +95,8 @@ public class EntryConfig {
 						crypts.add(encrypt);
 						keys.get(i).addKey(dkey);
 					}
-					System.out.println("[DETER_EQUAL]Encrypting: " + auxString);
-					System.out.println("[DETER_EQUAL]Encrypted: " + encrypt);
+				//	System.out.println("[DETER_EQUAL]Encrypting: " + auxString);
+				//	System.out.println("[DETER_EQUAL]Encrypted: " + encrypt);
 					break;
 				case EntryConfig.DETERMINISTIC_EQUIV:break;
 				case EntryConfig.ORDER_LESS:
@@ -113,8 +113,8 @@ public class EntryConfig {
 						crypts.add(res);
 						keys.get(i).addKey(key);
 					}
-					System.out.println("[ORDER_LESS]Encrypting: " + auxInt);
-					System.out.println("[ORDER_LESS]Encrypted: " + res);
+				//	System.out.println("[ORDER_LESS]Encrypting: " + auxInt);
+				//	System.out.println("[ORDER_LESS]Encrypted: " + res);
 					break;
 				case EntryConfig.ORDER_GREAT:break;
 				case EntryConfig.ORDER_LESS_EQUAL:break;
@@ -131,8 +131,8 @@ public class EntryConfig {
 						crypts.add(encrypted);
 						keys.get(i).addKey(skey);
 					}
-					System.out.println("[SEARCHABLE]Encrypting: " + auxString);
-					System.out.println("[SEARCHABLE]Encrypted: " + encrypted);
+				//	System.out.println("[SEARCHABLE]Encrypting: " + auxString);
+				//	System.out.println("[SEARCHABLE]Encrypted: " + encrypted);
 					
 					break;
 				case EntryConfig.PAILIER:
@@ -152,8 +152,8 @@ public class EntryConfig {
 							crypts.add(bigcrypt);
 							keys.get(i).addKey(pk);
 						}
-						System.out.println("[PAILLIER]Encrypting: " + big.toString());
-						System.out.println("[PAILLIER]Encrypted: " + bigcrypt.toString());
+					//	System.out.println("[PAILLIER]Encrypting: " + big.toString());
+					//	System.out.println("[PAILLIER]Encrypted: " + bigcrypt.toString());
 					
 					}catch(Exception e){
 						e.printStackTrace();
@@ -178,8 +178,8 @@ public class EntryConfig {
 						keys.get(i).addKey(rsaPublicKey);
 						keys.get(i).addKey(rsaPrivateKey);
 					}
-					System.out.println("[RSA]Encrypting: " + bigOne.toString());
-					System.out.println("[RSA]Encrypted: " + bigCode.toString());
+				//	System.out.println("[RSA]Encrypting: " + bigOne.toString());
+				//	System.out.println("[RSA]Encrypted: " + bigCode.toString());
 					break;
 				case EntryConfig.RAND:
 					try{
@@ -197,8 +197,8 @@ public class EntryConfig {
 							keys.get(i).addKey(randKey);
 							keys.get(i).addKey(iv);
 						}
-						System.out.println("[RAND]Encrypting: " + auxString);
-						System.out.println("[RAND]Encrypted: " + randEncrypt);
+				//		System.out.println("[RAND]Encrypting: " + auxString);
+				//		System.out.println("[RAND]Encrypted: " + randEncrypt);
 					}catch(Exception e){
 						e.printStackTrace();
 					}
@@ -216,13 +216,13 @@ public class EntryConfig {
 		
 		Entry encryptedEntry = raw;
 		List<Object> vals = new ArrayList<Object>(); //to store the uncripted values
-		System.out.println("=====[DECRYPTING]=====");
+	/*	System.out.println("=====[DECRYPTING]=====");
 		System.out.println("Encripted Entry:");
 		System.out.println(encryptedEntry.values);
 		System.out.println("Keys to Decript:");
 		System.out.println(keys);
 		System.out.println("Decripting Entry:");
-		
+	*/	
 		int size = encryptedEntry.values.size();
 		for(int i = 0 ; i < size ; i++){
 			
@@ -233,7 +233,7 @@ public class EntryConfig {
 				String cryptDetVal = (String)encryptedEntry.getElem(i);
 				String trueDetVal = HomoDet.decrypt(dkey, cryptDetVal);
 				vals.add(trueDetVal);
-				System.out.println("[DETER_EQUAL]Decrypted: " + trueDetVal);
+			//	System.out.println("[DETER_EQUAL]Decrypted: " + trueDetVal);
 				break;
 			case EntryConfig.DETERMINISTIC_EQUIV:break;
 			case EntryConfig.ORDER_LESS:
@@ -242,7 +242,7 @@ public class EntryConfig {
 				long cryptOrdVal = (long) encryptedEntry.getElem(i);
 				int trueOrdVal = ope.decrypt(cryptOrdVal);
 				vals.add(trueOrdVal);
-				System.out.println("[ORDER_LESS]Decrypted: " + trueOrdVal);
+		//		System.out.println("[ORDER_LESS]Decrypted: " + trueOrdVal);
 				break;
 			case EntryConfig.ORDER_GREAT:break;
 			case EntryConfig.ORDER_LESS_EQUAL:break;
@@ -252,7 +252,7 @@ public class EntryConfig {
 				String cryptSerVal = (String)encryptedEntry.getElem(i);
 				String trueSerVal = HomoSearch.decrypt(skey, cryptSerVal);
 				vals.add(trueSerVal);
-				System.out.println("[SEARCHABLE]Decrypted: " + trueSerVal);
+			//	System.out.println("[SEARCHABLE]Decrypted: " + trueSerVal);
 				break;
 			case EntryConfig.PAILIER:
 				try{
@@ -260,7 +260,7 @@ public class EntryConfig {
 					BigInteger cryptPaiVal = (BigInteger)encryptedEntry.getElem(i);
 					BigInteger truePaiVal = HomoAdd.decrypt(cryptPaiVal, pkey);
 					vals.add(truePaiVal);
-					System.out.println("[PAILLIER]Decrypted: " + truePaiVal.toString());
+			//		System.out.println("[PAILLIER]Decrypted: " + truePaiVal.toString());
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -271,7 +271,7 @@ public class EntryConfig {
 				BigInteger cryptRSAVal = (BigInteger) encryptedEntry.getElem(i);
 				BigInteger trueRSAVal = HomoMult.decrypt(privKey, cryptRSAVal);
 				vals.add(trueRSAVal);
-				System.out.println("[RSA]Decrypted: "+ trueRSAVal.toString() );
+			//	System.out.println("[RSA]Decrypted: "+ trueRSAVal.toString() );
 				break;
 			case EntryConfig.RAND:
 				//for Random, we need to store 2 keys
@@ -279,7 +279,7 @@ public class EntryConfig {
 				byte[] iv = (byte[])keys.get(i).getKey(1);
 				String message = HomoRand.decrypt(randKey, iv, (String)encryptedEntry.getElem(i));
 				vals.add(message);
-				System.out.println("[RAND]Decrypted: "+ message);
+			//	System.out.println("[RAND]Decrypted: "+ message);
 				break;
 		
 			}
@@ -290,13 +290,13 @@ public class EntryConfig {
 	
 	public Object decryptElem(int pos, Object elem){
 		
-		System.out.println("=====[DECRYPTING ELEMENT]=====");
+	/*	System.out.println("=====[DECRYPTING ELEMENT]=====");
 		System.out.println("Encripted Elem:");
 		System.out.println(elem);
 		System.out.println("Keys to Decript:");
 		System.out.println(keys);
 		System.out.println("Decripting Elem:");
-		
+		*/
 		
 			switch(ops[pos]){
 			
@@ -304,7 +304,7 @@ public class EntryConfig {
 				SecretKey dkey = (SecretKey)keys.get(pos).getKey(0); //gets the KeyStorage for this operand and then get the Key
 				String cryptDetVal = (String)elem;
 				String trueDetVal = HomoDet.decrypt(dkey, cryptDetVal);
-				System.out.println("[DETER_EQUAL]Decrypted: " + trueDetVal);
+			//	System.out.println("[DETER_EQUAL]Decrypted: " + trueDetVal);
 				return trueDetVal;
 			case EntryConfig.DETERMINISTIC_EQUIV:break;
 			case EntryConfig.ORDER_LESS:
@@ -312,7 +312,7 @@ public class EntryConfig {
 				HomoOpeInt ope = new HomoOpeInt(okey);
 				long cryptOrdVal = (long) elem;
 				int trueOrdVal = ope.decrypt(cryptOrdVal);
-				System.out.println("[ORDER_LESS]Decrypted: " + trueOrdVal);
+		//		System.out.println("[ORDER_LESS]Decrypted: " + trueOrdVal);
 				return trueOrdVal;
 			case EntryConfig.ORDER_GREAT:break;
 			case EntryConfig.ORDER_LESS_EQUAL:break;
@@ -327,7 +327,7 @@ public class EntryConfig {
 					PaillierKey pkey = (PaillierKey)keys.get(pos).getKey(0); 
 					BigInteger cryptPaiVal = (BigInteger)elem;
 					BigInteger truePaiVal = HomoAdd.decrypt(cryptPaiVal, pkey);
-					System.out.println("[PAILLIER]Decrypted: " + truePaiVal.toString());
+			//		System.out.println("[PAILLIER]Decrypted: " + truePaiVal.toString());
 					return truePaiVal;
 				}catch(Exception e){
 					e.printStackTrace();
@@ -338,14 +338,14 @@ public class EntryConfig {
 				RSAPrivateKey privKey = (RSAPrivateKey)keys.get(pos).getKey(1);
 				BigInteger cryptRSAVal = (BigInteger) elem;
 				BigInteger trueRSAVal = HomoMult.decrypt(privKey, cryptRSAVal);
-				System.out.println("[RSA]Decrypted: "+ trueRSAVal.toString() );
+			//	System.out.println("[RSA]Decrypted: "+ trueRSAVal.toString() );
 				return trueRSAVal;
 			case EntryConfig.RAND:
 				//for Random, we need to store 2 keys
 				SecretKey randKey = (SecretKey) keys.get(pos).getKey(0);
 				byte[] iv = (byte[])keys.get(pos).getKey(1);
 				String message = HomoRand.decrypt(randKey, iv, (String)elem);
-				System.out.println("[RAND]Decrypted: "+ message);
+			//	System.out.println("[RAND]Decrypted: "+ message);
 				return message;
 			}
 		return null;
@@ -356,7 +356,7 @@ public class EntryConfig {
 		if(!keysStored)
 			return null;
 		
-		System.out.println("=====[ENCRYPTING ELEMENT]=====");
+	//	System.out.println("=====[ENCRYPTING ELEMENT]=====");
 		
 		int auxInt = 0;
 		String auxString = "";
@@ -372,8 +372,8 @@ public class EntryConfig {
 				String encrypt;
 				dkey = (SecretKey)keys.get(pos).getKey(0);
 				encrypt = HomoDet.encrypt(dkey, auxString);
-				System.out.println("[DETER_EQUAL]Encrypting: " + auxString);
-				System.out.println("[DETER_EQUAL]Encrypted: " + encrypt);
+			//	System.out.println("[DETER_EQUAL]Encrypting: " + auxString);
+			//	System.out.println("[DETER_EQUAL]Encrypted: " + encrypt);
 				return encrypt;
 			case EntryConfig.DETERMINISTIC_EQUIV:break;
 			case EntryConfig.ORDER_LESS:
@@ -381,8 +381,8 @@ public class EntryConfig {
 				long okey = (long)keys.get(pos).getKey(0);
 				HomoOpeInt ope = new HomoOpeInt(okey);
 				res = ope.encrypt(auxInt);
-				System.out.println("[ORDER_LESS]Encrypting: " + auxInt);
-				System.out.println("[ORDER_LESS]Encrypted: " + res);
+			//	System.out.println("[ORDER_LESS]Encrypting: " + auxInt);
+			//	System.out.println("[ORDER_LESS]Encrypted: " + res);
 				return res;
 			case EntryConfig.ORDER_GREAT:break;
 			case EntryConfig.ORDER_LESS_EQUAL:break;
@@ -391,8 +391,8 @@ public class EntryConfig {
 				String encrypted;
 				SecretKey skey = (SecretKey)keys.get(pos).getKey(0); 
 				encrypted = HomoSearch.encrypt(skey, auxString);
-				System.out.println("[SEARCHABLE]Encrypting: " + auxString);
-				System.out.println("[SEARCHABLE]Encrypted: " + encrypted);
+			//	System.out.println("[SEARCHABLE]Encrypting: " + auxString);
+			//	System.out.println("[SEARCHABLE]Encrypted: " + encrypted);
 				return encrypted;
 			case EntryConfig.PAILIER:
 				try{
@@ -401,8 +401,8 @@ public class EntryConfig {
 					PaillierKey pkey = (PaillierKey)keys.get(pos).getKey(0); 
 					big = new BigInteger(Integer.toString(auxInt));
 					bigcrypt = HomoAdd.encrypt(big, pkey);
-					System.out.println("[PAILLIER]Encrypting: " + big.toString());
-					System.out.println("[PAILLIER]Encrypted: " + bigcrypt.toString());
+				//	System.out.println("[PAILLIER]Encrypting: " + big.toString());
+				//	System.out.println("[PAILLIER]Encrypted: " + bigcrypt.toString());
 					return bigcrypt;
 				}catch(Exception e){
 					e.printStackTrace();
@@ -415,8 +415,8 @@ public class EntryConfig {
 				RSAPrivateKey rsaPrivateKey = (RSAPrivateKey)keys.get(pos).getKey(1); // not needed for now
 				bigOne = new BigInteger(Integer.toString(auxInt));
 				bigCode = HomoMult.encrypt(rsaPublicKey,bigOne);
-				System.out.println("[RSA]Encrypting: " + bigOne.toString());
-				System.out.println("[RSA]Encrypted: " + bigCode.toString());
+			//	System.out.println("[RSA]Encrypting: " + bigOne.toString());
+			//	System.out.println("[RSA]Encrypted: " + bigCode.toString());
 				return bigCode;
 			case EntryConfig.RAND:
 				try{
@@ -424,8 +424,8 @@ public class EntryConfig {
 					SecretKey randKey = (SecretKey) keys.get(pos).getKey(0);
 					byte[] iv = (byte[])keys.get(pos).getKey(1);
 					randEncrypt = HomoRand.encrypt(randKey, iv, auxString);
-					System.out.println("[RAND]Encrypting: " + auxString);
-					System.out.println("[RAND]Encrypted: " + randEncrypt);
+				//	System.out.println("[RAND]Encrypting: " + auxString);
+				//	System.out.println("[RAND]Encrypted: " + randEncrypt);
 					return randEncrypt;
 				}catch(Exception e){
 					e.printStackTrace();
