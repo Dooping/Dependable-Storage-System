@@ -60,7 +60,7 @@ public class Benchmarks {
 		for(int i = 0 ; i < 100 ; i ++){
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
-					.request().header("key", "mykey").async().
+					.request().header("key", "mykey"+i).async().
 					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
 			
 			status = value.get().getStatus();
@@ -86,7 +86,7 @@ public class Benchmarks {
 			value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
-					.header("key", "mykey")
+					.header("key", "mykey"+i)
 					.async()
 					.get();
 			
@@ -116,7 +116,7 @@ public class Benchmarks {
 			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
-					.request().header("key", "mykey").async().
+					.request().header("key", "mykey"+i).async().
 					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
 			
 			status = value.get().getStatus();
@@ -130,7 +130,7 @@ public class Benchmarks {
 	        value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
-					.header("key", "mykey")
+					.header("key", "mykey"+i)
 					.async()
 					.get();
 			
@@ -160,7 +160,7 @@ public class Benchmarks {
 			//ADDELEM
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/addelem")
-					.request().header("key", "mykey").async().post(null);
+					.request().header("key", "mykey"+i).async().post(null);
 			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -171,7 +171,7 @@ public class Benchmarks {
 	        //READELEM
 	        nanotimeStart = System.nanoTime();
 			value = target.path("/server/readelem")
-					.request().header("key", "mykey").header("pos", 1)
+					.request().header("key", "mykey"+i).header("pos", 1)
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
 					.get();
@@ -203,7 +203,7 @@ public class Benchmarks {
 			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
-					.request().header("key", "mykey").async().
+					.request().header("key", "mykey"+i).async().
 					post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
@@ -216,7 +216,7 @@ public class Benchmarks {
 	        value = target.path("/server/getset")
 					.request()
 					.accept(MediaType.APPLICATION_JSON)
-					.header("key", "mykey")
+					.header("key", "mykey"+i)
 					.async()
 					.get();		
 			status = value.get().getStatus();
@@ -230,7 +230,7 @@ public class Benchmarks {
 	        JSONObject jsonobj = new JSONObject();
 			jsonobj.append("element", 2);
 			value = target.path("/server/writeelem").request()
-					.header("key", "mykey").header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));			
+					.header("key", "mykey"+i).header("pos", 2).async().post(Entity.entity(jsonobj.toString(), MediaType.APPLICATION_JSON));			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -240,7 +240,7 @@ public class Benchmarks {
 	        //READELEM
 	        nanotimeStart = System.nanoTime();
 			value = target.path("/server/readelem")
-					.request().header("key", "mykey").header("pos", 1)
+					.request().header("key", "mykey"+i).header("pos", 1)
 					.accept(MediaType.APPLICATION_JSON)
 					.async()
 					.get();			
@@ -253,7 +253,7 @@ public class Benchmarks {
 	        //ADDELEM
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/addelem")
-					.request().header("key", "mykey").async().post(null);			
+					.request().header("key", "mykey"+i).async().post(null);			
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -265,7 +265,7 @@ public class Benchmarks {
 	        JSONObject json = new JSONObject();
 			json.append("element", "two");
 			value = target.path("/server/iselem").request()
-					.header("key","mykey").async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
+					.header("key","mykey"+i).async().post(Entity.entity(json.toString(),MediaType.APPLICATION_JSON));
 			status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -274,7 +274,7 @@ public class Benchmarks {
 	        
 	        //REMOVESET
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/removeset").request().header("key", "mykey").async().delete();
+	        value = target.path("/server/removeset").request().header("key", "mykey"+i).async().delete();
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -289,19 +289,19 @@ public class Benchmarks {
 	}
 	
 	public void benchmarkE1E3() throws Exception{
-		/*
+		
 		target.path("/server/putset")
 		.request().header("key", "sbp").async().
-		post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON));
+		post(Entity.entity(new Entry(1,"two",3,"four",5,"six"), MediaType.APPLICATION_JSON)).get().getStatus();
 		
 		target.path("/server/putset")
 		.request().header("key", "dg").async().
-		post(Entity.entity(new Entry(2,"three",4,"five",6,"seven"), MediaType.APPLICATION_JSON));
+		post(Entity.entity(new Entry(2,"three",4,"five",6,"seven"), MediaType.APPLICATION_JSON)).get().getStatus();
 		
 		target.path("/server/putset")
 		.request().header("key", "csd").async().
-		post(Entity.entity(new Entry(20,"sd",3,"asd",5,"csd"), MediaType.APPLICATION_JSON));
-		*/
+		post(Entity.entity(new Entry(20,"sd",3,"asd",5,"csd"), MediaType.APPLICATION_JSON)).get().getStatus();
+		
 		
 		ArrayList<Entry> entries = new ArrayList<Entry>();
 		entries.add(new Entry(1,"two",3,"four",5,"six"));
