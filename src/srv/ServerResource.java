@@ -1,10 +1,13 @@
 package srv;
 
 import java.math.BigInteger;
+import java.security.KeyPair;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -37,6 +40,8 @@ public class ServerResource {
 
 	@Context ActorSystem actorSystem;
 	@Context boolean encrypt;
+	@Inject
+	 private javax.inject.Provider<org.glassfish.grizzly.http.server.Request> request;
 	String value = "default";
 	Entry dummyEntry = new Entry(1,"two",3,"four",5,"six");
 	EntryConfig conf;
@@ -58,9 +63,9 @@ public class ServerResource {
 	@ManagedAsync
 	public void putset(@HeaderParam("key") String key, Entry entry, @Suspended final AsyncResponse asyncResponse){
 		Entry n = entry;
-		
+		String requester = request.get().getRemoteAddr();
 		if(encrypt)
-			n = conf.encryptEntry(entry);
+			n = conf.encryptEntry(entry,requester);
 		else{
 			//convert Integers to bigintegers, the order remain as long
 			Entry specialEntry = new Entry();
@@ -110,7 +115,8 @@ public class ServerResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/getset")
-	public void getSet(@HeaderParam("key") String key, @Suspended final AsyncResponse asyncResponse){	
+	public void getSet(@HeaderParam("key") String key, @Suspended final AsyncResponse asyncResponse){
+		String requester = request.get().getRemoteAddr();
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		Read read = new Read(System.nanoTime(),key);
@@ -125,7 +131,7 @@ public class ServerResource {
             	}else{
             		if(encrypt){
 	            		ReadResult res = (ReadResult)result;
-	            		asyncResponse.resume(Response.ok().entity(conf.decryptEntry(res.v())).build());
+	            		asyncResponse.resume(Response.ok().entity(conf.decryptEntry(res.v(),requester)).build());
             		}else{
             			//deliver as it is (uncrypted)
             			ReadResult res = (ReadResult)result;
@@ -212,6 +218,7 @@ public class ServerResource {
 	@Path("/writeelem")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void writeElem(@HeaderParam("key") String key, String json,@HeaderParam("pos") int pos,@Suspended final AsyncResponse asyncResponse){
+		String requester = request.get().getRemoteAddr();
 		JSONObject o = new JSONObject(json);
 		JSONArray jdata = o.getJSONArray("element");
 		Object obj = jdata.get(0);
@@ -239,7 +246,7 @@ public class ServerResource {
             		else{
 	            		entry.values.remove(pos);
 	            		if(encrypt)
-	            			entry.values.add(pos,conf.encryptElem(pos, obj));
+	            			entry.values.add(pos,conf.encryptElem(pos, obj, requester));
 	            		else{
 	            			Object[] types = conf.getTypes();
 	            			if(types[pos] instanceof Integer)
@@ -275,6 +282,7 @@ public class ServerResource {
 	@Path("/readelem")
 	@Produces(MediaType.APPLICATION_JSON)
 	public void readElem(@HeaderParam("key") String key,@HeaderParam("pos") int pos,@Suspended final AsyncResponse asyncResponse){
+		String requester = request.get().getRemoteAddr();
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
@@ -293,7 +301,7 @@ public class ServerResource {
             		ReadResult res = (ReadResult)result;
             		if(res.v()!=null){
             			if(encrypt)
-            				asyncResponse.resume(Response.ok().entity(conf.decryptElem(pos, res.v().getElem(pos))).build());
+            				asyncResponse.resume(Response.ok().entity(conf.decryptElem(pos, res.v().getElem(pos), requester)).build());
             			else{ 
             				//deliver as it is (uncrypteds)
             				asyncResponse.resume(Response.ok().entity(res.v().getElem(pos)).build());
@@ -346,6 +354,7 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void sum(@HeaderParam("pos") int pos,@HeaderParam("keyOne")String keyOne,@HeaderParam("keyTwo")String keyTwo, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			Read read = new Read(System.nanoTime(),keyOne);
@@ -383,7 +392,7 @@ public class ServerResource {
 			        	            		System.out.println(pos);
 			        	            		BigInteger big1Code = (BigInteger) entry1.getElem(pos);
 			        	            		BigInteger big2Code = (BigInteger) entry2.getElem(pos); 
-			        	            		PaillierKey pk = (PaillierKey)conf.keys.get(pos).getKey(0);
+			        	            		PaillierKey pk = (PaillierKey)conf.keys.get(requester).getKey(pos);
 			        	            		BigInteger res = HomoAdd.sum(big1Code, big2Code, pk.getNsquare());
 			                        		asyncResponse.resume(Response.ok().entity(HomoAdd.decrypt(res, pk).toString()).build());
 			                        		}catch(Exception e){
@@ -412,6 +421,7 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void sumAll(@HeaderParam("pos")int pos, @Suspended final AsyncResponse asyncResponse){	
+			String requester = request.get().getRemoteAddr();
 			
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
@@ -437,7 +447,7 @@ public class ServerResource {
 	                	if(res.res()!=null){
 	                		if(encrypt){
 		                		BigInteger big = res.res();
-		                		BigInteger truePaiVal = HomoAdd.decrypt(big, (PaillierKey)conf.keys.get(pos).getKey(0));
+		                		BigInteger truePaiVal = (BigInteger)conf.decryptElem(pos, big, requester);
 		                		asyncResponse.resume(Response.ok().entity(truePaiVal.toString()).build());
 	                		}else{
 	                			//deliver as it is (uncrypted)
@@ -457,6 +467,7 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void mult(@HeaderParam("pos") int pos,@HeaderParam("keyOne") String keyOne, @HeaderParam("keyTwo") String keyTwo, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			//missing: check if encryption is active > what to send to Read?
@@ -493,9 +504,10 @@ public class ServerResource {
 				                        		ReadResult res2 = (ReadResult)result;
 				        	            		Entry entry2 = res2.v();
 				        	            		BigInteger big1Code = (BigInteger) entry1.getElem(pos);
-				        	            		BigInteger big2Code = (BigInteger) entry2.getElem(pos); 
-				        	            		RSAPublicKey pubkey = (RSAPublicKey)conf.keys.get(pos).getKey(0);
-				        	            		RSAPrivateKey prikey = (RSAPrivateKey)conf.keys.get(pos).getKey(1);
+				        	            		BigInteger big2Code = (BigInteger) entry2.getElem(pos);
+				        	            		KeyPair pair = (KeyPair) conf.keys.get(requester).getKey(pos);
+				        	            		RSAPublicKey pubkey = (RSAPublicKey) pair.getPublic();
+				        	            		RSAPrivateKey prikey = (RSAPrivateKey)pair.getPrivate();
 				        	            		BigInteger product = HomoMult.multiply(big1Code, big2Code, pubkey);
 				                        		asyncResponse.resume(Response.ok().entity(HomoMult.decrypt(prikey,product).toString()).build());
 			                        		}catch(Exception e){
@@ -527,6 +539,7 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void multAll(@HeaderParam("pos") int pos, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			MultAll mult ;
@@ -551,8 +564,7 @@ public class ServerResource {
 	            		if(encrypt){
 		            		SumMultAllResult res = (SumMultAllResult) result;
 		            		BigInteger big = res.res();
-		                	RSAPrivateKey rsaprivKey =(RSAPrivateKey) conf.keys.get(pos).getKey(1);
-		                	BigInteger trueRSAVal = HomoMult.decrypt(rsaprivKey, big);
+		                	BigInteger trueRSAVal = (BigInteger)conf.decryptElem(pos, big, requester);
 		                	asyncResponse.resume(Response.ok().entity(trueRSAVal.toString()).build());
 	            		}else{
 	            			//deliver as it is ( uncrypted )
@@ -570,11 +582,12 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String val =(String) jdata.get(0);
 			if(encrypt)
-				val = (String)conf.encryptElem(pos, val);
+				val = (String)conf.encryptElem(pos, val, requester);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SearchEq seq = new SearchEq(System.nanoTime(), pos, val);
@@ -606,12 +619,13 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchNEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			//return Response.ok().build();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String val =(String) jdata.get(0);
 			if(encrypt)
-				val = (String)conf.encryptElem(pos, val);
+				val = (String)conf.encryptElem(pos, val, requester);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SearchNEq seq = new SearchNEq(System.nanoTime(), pos, val);
@@ -644,6 +658,7 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchEntry(String json, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			Entry specialEntry = new Entry();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
@@ -652,7 +667,7 @@ public class ServerResource {
 			for(int i = 0 ; i < searchables.length ;i++){
 				if(searchables[i])
 					if(encrypt)
-						specialEntry.addCustomElem((String)conf.encryptElem(i, val));
+						specialEntry.addCustomElem((String)conf.encryptElem(i, val, requester));
 					else
 						specialEntry.addCustomElem(val);
 				else
@@ -689,6 +704,7 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchEntryOR(List<Object> vals, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			List<Entry> auxEntries = new ArrayList<Entry>();
 			boolean[] searchables = conf.getOpIndex("%");
 			Entry specialEntry;
@@ -697,7 +713,7 @@ public class ServerResource {
 				for(int j = 0; j < conf.getTypes().length; j++){
 					if(vals.get(i)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
 						if(encrypt){
-							specialEntry.addCustomElem((String)conf.encryptElem(j, vals.get(i)));
+							specialEntry.addCustomElem((String)conf.encryptElem(j, vals.get(i), requester));
 						}else
 								specialEntry.addCustomElem(vals.get(i));
 						}else{
@@ -737,6 +753,7 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchEntryAND(List<Object> vals, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			List<Entry> auxEntries = new ArrayList<Entry>();
 			boolean[] searchables = conf.getOpIndex("%");
 			Entry specialEntry;
@@ -745,7 +762,7 @@ public class ServerResource {
 				for(int j = 0; j < conf.getTypes().length; j++){
 					if(vals.get(i)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
 						if(encrypt)
-							specialEntry.addCustomElem((String)conf.encryptElem(j, vals.get(i)));
+							specialEntry.addCustomElem((String)conf.encryptElem(j, vals.get(i), requester));
 						else
 							specialEntry.addCustomElem(vals.get(i));
 					}else{
@@ -845,13 +862,14 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchEqInt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
 			if(encrypt)
-				secVal = (Long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val, requester);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SearchEqInt seq = new SearchEqInt(System.nanoTime(), pos, secVal);
@@ -883,13 +901,14 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchGt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
 			if(encrypt)
-				secVal = (Long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val, requester);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SearchGt seq = new SearchGt(System.nanoTime(), pos, secVal);
@@ -921,13 +940,14 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchGtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){	
+			String requester = request.get().getRemoteAddr();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
 			if(encrypt)
-				secVal = (Long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val, requester);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SearchGtEq seq = new SearchGtEq(System.nanoTime(), pos, secVal);
@@ -959,13 +979,14 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchLt(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){		
+			String requester = request.get().getRemoteAddr();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
 			if(encrypt)
-				secVal = (Long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val, requester);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SearchLt seq = new SearchLt(System.nanoTime(), pos, secVal);
@@ -997,13 +1018,14 @@ public class ServerResource {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
 		public void searchLtEq(@HeaderParam("pos") int pos, String json, @Suspended final AsyncResponse asyncResponse){
+			String requester = request.get().getRemoteAddr();
 			JSONObject o = new JSONObject(json);
 			JSONArray jdata = o.getJSONArray("element");
 			String res =(String) jdata.get(0);
 			int val =Integer.parseInt(res);
 			long secVal = new Long(Integer.parseInt(res));
 			if(encrypt)
-				secVal = (Long)conf.encryptElem(pos, val);
+				secVal = (Long)conf.encryptElem(pos, val, requester);
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SearchLtEq seq = new SearchLtEq(System.nanoTime(), pos, secVal);

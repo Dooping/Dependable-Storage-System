@@ -74,7 +74,7 @@ public class EntryConfig {
 	public Entry decryptEntry(Entry raw, String client){
 		Entry newEntry = new Entry();
 		for(int i = 0 ; i < raw.size() ; i++)
-			newEntry.addCustomElem(this.encryptElem(i, raw.getElem(i), client));
+			newEntry.addCustomElem(this.decryptElem(i, raw.getElem(i), client));
 		return newEntry;
 	}
 	
@@ -104,7 +104,7 @@ public class EntryConfig {
 				return HomoSearch.decrypt(skey, cryptSerVal);
 			case EntryConfig.PAILIER:
 				try{
-					PaillierKey pkey = (PaillierKey)clientKey.getKey(0); 
+					PaillierKey pkey = (PaillierKey)clientKey.getKey(pos); 
 					BigInteger cryptPaiVal = (BigInteger)elem;
 					return HomoAdd.decrypt(cryptPaiVal, pkey);
 				}catch(Exception e){
