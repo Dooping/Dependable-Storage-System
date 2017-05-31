@@ -19,4 +19,12 @@ public class KeyStorage {
 		return keys.get(i);
 	}
 	
+	public int size(){
+		return keys.size();
+	}
+	
+	public boolean hasPos(int pos){
+		return pos<keys.size();
+	}
+	
 }
