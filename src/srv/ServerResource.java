@@ -428,7 +428,7 @@ public class ServerResource {
 			Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 			SumAll sum;
 			if(encrypt){
-				PaillierKey pkey = (PaillierKey) conf.keys.get(pos).getKey(0);
+				PaillierKey pkey = (PaillierKey) conf.keys.get(requester).getKey(pos);
 				sum = new SumAll(System.nanoTime(),pos,encrypt,pkey.getNsquare());
 			}else{
 				sum = new SumAll(System.nanoTime(),pos,encrypt,null);
@@ -546,7 +546,7 @@ public class ServerResource {
 			MultAll mult ;
 			//missing: check if encryption is active > what to send to MultAll?
 			if(encrypt){
-				RSAPublicKey rsapubkey = (RSAPublicKey)conf.keys.get(pos).getKey(0);
+				RSAPublicKey rsapubkey = (RSAPublicKey)((KeyPair)conf.keys.get(requester).getKey(pos)).getPublic();
 				mult = new MultAll(System.nanoTime(),pos,encrypt,rsapubkey);
 			}else{
 				mult = new MultAll(System.nanoTime(),pos,encrypt,null);
