@@ -69,7 +69,7 @@ public class ClientGet {
 		URI baseURI = UriBuilder.fromUri("http://" + hostname + "/").build();
 		WebTarget target = client.target(baseURI);
 		
-		Benchmarks test = new Benchmarks(target,false, null); // for the benchmarks
+		Benchmarks test = new Benchmarks(target,false, null,null); // for the benchmarks
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		
 		boolean run = true;

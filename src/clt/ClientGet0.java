@@ -263,8 +263,8 @@ public class ClientGet0 {
 							JSONObject jsobj = new JSONObject();
 							jsobj.append("element", partsSearcheq[1]);
 							Future<Response> searceq = target.path("/server/searcheq").request().header("pos", posSearcheq).async().post(Entity.entity(jsobj.toString(),MediaType.APPLICATION_JSON));
-							List<Entry> seqlist = searceq.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlist)
+							List<String> seqlist = searceq.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlist)
 								System.out.println("Call: /server/searcheq ; Response: " + seqentry.toString());
 						}else{
 							System.err.println("Searcheq not allowed in position: "+posSearcheq+ ".  Allowed operation on this position: "+ops[posSearcheq]);
@@ -280,8 +280,8 @@ public class ClientGet0 {
 						JSONObject jsobj2 = new JSONObject();
 						jsobj2.append("element", partsSearchneq[1]);
 						Future<Response> searchneq = target.path("/server/searchneq").request().header("pos", posSearchneq).async().post(Entity.entity(jsobj2.toString(),MediaType.APPLICATION_JSON));
-						List<Entry> seqlist2 = searchneq.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlist2)
+						List<String> seqlist2 = searchneq.get().readEntity(new GenericType<List<String>>(){});
+						for(String seqentry : seqlist2)
 							System.out.println("Call: /server/searchneq ; Response: " + seqentry.toString());
 						}else{
 							System.err.println("Searchneq not allowed in position: "+posSearchneq+ ".  Allowed operation on this position: "+ops[posSearchneq]);
@@ -298,8 +298,8 @@ public class ClientGet0 {
 								n7.addCustomElem(parts7[i]);
 						}
 						Future<Response> searchentry = target.path("/server/searchentry").request().async().post(Entity.entity(n7,MediaType.APPLICATION_JSON));
-						List<Entry> seqlist3 = searchentry.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlist3)
+						List<String> seqlist3 = searchentry.get().readEntity(new GenericType<List<String>>(){});
+						for(String seqentry : seqlist3)
 							System.out.println("Call: /server/searchentry ; Response: " + seqentry.toString());
 						
 						break;
@@ -321,8 +321,8 @@ public class ClientGet0 {
 							entries.add(entryOR);
 						}
 						Future<Response> searchentryor = target.path("/server/searchentryor").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
-						List<Entry> seqlist4 = searchentryor.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlist4)
+						List<String> seqlist4 = searchentryor.get().readEntity(new GenericType<List<String>>(){});
+						for(String seqentry : seqlist4)
 							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
 						break;
 					case "9":
@@ -343,8 +343,8 @@ public class ClientGet0 {
 							entriesAnd.add(entryAND);
 						}
 						Future<Response> searchentryand = target.path("/server/searchentryand").request().async().post(Entity.entity(entriesAnd,MediaType.APPLICATION_JSON));
-						List<Entry> seqlist5 = searchentryand.get().readEntity(new GenericType<List<Entry>>(){});
-						for(Entry seqentry : seqlist5)
+						List<String> seqlist5 = searchentryand.get().readEntity(new GenericType<List<String>>(){});
+						for(String seqentry : seqlist5)
 							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
 						break;
 					case "10":
@@ -352,8 +352,8 @@ public class ClientGet0 {
 						int posOrderls = Integer.parseInt(br.readLine());
 						if(ops[posOrderls].equals("<") || ops[posOrderls].equals("<=") || ops[posOrderls].equals(">") || ops[posOrderls].equals(">=")){
 							Future<Response> orderls = target.path("/server/orderls").request().header("pos", posOrderls).async().get();
-							List<Entry> seqlist6 = orderls.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlist6)
+							List<String> seqlist6 = orderls.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlist6)
 								System.out.println("Call: /server/orderls ; Response: " + seqentry.toString());
 						}else{
 							System.err.println("Orderls not allowed in position: "+posOrderls+ ".  Allowed operation on this position: "+ops[posOrderls]);
@@ -363,8 +363,8 @@ public class ClientGet0 {
 						int posOrdersl = Integer.parseInt(br.readLine());
 						if(ops[posOrdersl].equals("<") || ops[posOrdersl].equals("<=") || ops[posOrdersl].equals(">") || ops[posOrdersl].equals(">=")){
 							Future<Response> ordersl = target.path("/server/ordersl").request().header("pos", posOrdersl).async().get();
-							List<Entry> seqlist7 = ordersl.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlist7)
+							List<String> seqlist7 = ordersl.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlist7)
 								System.out.println("Call: /server/ordersl ; Response: " + seqentry.toString());
 						}else{
 							System.err.println("Ordersl not allowed in position: "+posOrdersl+ ".  Allowed operation on this position: "+ops[posOrdersl]);
@@ -378,8 +378,8 @@ public class ClientGet0 {
 							JSONObject jsoneqint = new JSONObject();
 							jsoneqint.append("element", partsSearcheqint[1]);
 							Future<Response> searcheqint = target.path("/server/searcheqint").request().header("pos", posSearcheqint).async().post(Entity.entity(jsoneqint.toString(),MediaType.APPLICATION_JSON));
-							List<Entry> seqlisteqint = searcheqint.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlisteqint)
+							List<String> seqlisteqint = searcheqint.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlisteqint)
 								System.out.println("Call: /server/searcheqint ; Response: " + seqentry.toString());
 					}else{
 						System.err.println("Searcheqint not allowed in position: "+posSearcheqint+ ".  Allowed operation on this position: "+ops[posSearcheqint]);
@@ -393,8 +393,8 @@ public class ClientGet0 {
 							JSONObject jsongt = new JSONObject();
 							jsongt.append("element", partsSearchgt[1]);
 							Future<Response> searchgt = target.path("/server/searchgt").request().header("pos", posSearchgt).async().post(Entity.entity(jsongt.toString(),MediaType.APPLICATION_JSON));
-							List<Entry> seqlistgt = searchgt.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlistgt)
+							List<String> seqlistgt = searchgt.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlistgt)
 								System.out.println("Call: /server/searchgt ; Response: " + seqentry.toString());
 					}else{
 						System.err.println("Searchgt not allowed in position: "+posSearchgt+ ".  Allowed operation on this position: "+ops[posSearchgt]);
@@ -408,8 +408,8 @@ public class ClientGet0 {
 							JSONObject jsongteq = new JSONObject();
 							jsongteq.append("element", partsSearchgteq[1]);
 							Future<Response> searchgteq = target.path("/server/searchgteq").request().header("pos", posSearchgteq).async().post(Entity.entity(jsongteq.toString(),MediaType.APPLICATION_JSON));
-							List<Entry> seqlistgteq = searchgteq.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlistgteq)
+							List<String> seqlistgteq = searchgteq.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlistgteq)
 								System.out.println("Call: /server/searchgteq ; Response: " + seqentry.toString());
 						}else{
 							System.err.println("Searchgteq not allowed in position: "+posSearchgteq+ ".  Allowed operation on this position: "+ops[posSearchgteq]);
@@ -423,8 +423,8 @@ public class ClientGet0 {
 							JSONObject jsonlt = new JSONObject();
 							jsonlt.append("element", partsSearchlt[1]);
 							Future<Response> searchlt = target.path("/server/searchlt").request().header("pos", posSearchlt).async().post(Entity.entity(jsonlt.toString(),MediaType.APPLICATION_JSON));
-							List<Entry> seqlistlt = searchlt.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlistlt)
+							List<String> seqlistlt = searchlt.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlistlt)
 								System.out.println("Call: /server/searchlt ; Response: " + seqentry.toString());
 						}else{
 							System.err.println("Searchlt not allowed in position: "+posSearchlt+ ".  Allowed operation on this position: "+ops[posSearchlt]);
@@ -438,8 +438,8 @@ public class ClientGet0 {
 							JSONObject jsonlteq = new JSONObject();
 							jsonlteq.append("element", partsSearchlteq[1]);
 							Future<Response> searchlteq = target.path("/server/searchlteq").request().header("pos", posSearchlteq).async().post(Entity.entity(jsonlteq.toString(),MediaType.APPLICATION_JSON));
-							List<Entry> seqlistlteq = searchlteq.get().readEntity(new GenericType<List<Entry>>(){});
-							for(Entry seqentry : seqlistlteq)
+							List<String> seqlistlteq = searchlteq.get().readEntity(new GenericType<List<String>>(){});
+							for(String seqentry : seqlistlteq)
 								System.out.println("Call: /server/searchlteq ; Response: " + seqentry.toString());
 					}else{
 							System.err.println("Searchlteq not allowed in position: "+posSearchlteq+ ".  Allowed operation on this position: "+ops[posSearchlteq]);

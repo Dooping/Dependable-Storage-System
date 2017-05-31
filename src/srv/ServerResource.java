@@ -589,18 +589,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 		            	EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+		            			 asyncResponse.resume(Response.ok().entity(seqlist).build());
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -635,18 +626,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -689,18 +671,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -747,18 +720,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -805,18 +769,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
 		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -844,18 +799,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -883,18 +829,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 	            		EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -930,18 +867,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 		            	EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -977,18 +905,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 		            	EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -1024,18 +943,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 		            	EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
-		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
+				                asyncResponse.resume(Response.ok().entity(seqlist).build());	
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -1071,18 +981,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 		            	EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
 		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
@@ -1118,18 +1019,9 @@ public class ServerResource {
 	            			asyncResponse.resume(Response.serverError());
 	            	}else{
 		            	EntrySet res = (EntrySet) result;
-		            	List<Entry> seqlist = res.set();
+		            	List<String> seqlist = res.set();
 		            	if(seqlist!= null){
-		            		if(encrypt){
-		            			List<Entry> decryptedEntries = new ArrayList<Entry>();
-					            for(Entry n : seqlist){
-					            	decryptedEntries.add(conf.decryptEntry(n));
-					            }
-				                asyncResponse.resume(Response.ok().entity(decryptedEntries).build());	
-		            		}else{
-		            			//deliver as it is (uncrypted)
 		            			asyncResponse.resume(Response.ok().entity(seqlist).build());
-		            		}
 			            }else{
 			               asyncResponse.resume(Response.ok().entity(false).build());
 			            }
