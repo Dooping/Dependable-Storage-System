@@ -391,7 +391,6 @@ public class ServerResource {
 		                        		try{
 			                        		ReadResult res2 = (ReadResult)result;
 			        	            		Entry entry2 = res2.v();
-			        	            		System.out.println(pos);
 			        	            		BigInteger big1Code = (BigInteger) entry1.getElem(pos);
 			        	            		BigInteger big2Code = (BigInteger) entry2.getElem(pos); 
 			        	            		PaillierKey pk = (PaillierKey)conf.keys.get(requester).getKey(pos);
