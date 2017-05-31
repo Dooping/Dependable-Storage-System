@@ -303,39 +303,47 @@ public class Benchmarks {
 		if(activeEncryption)
 			benchmark = "E3";
 			
-		List<Entry> randEntries;
+		//List<Entry> randEntries;
 		
 		//10 search ops
 		for(int i = 0 ; i < 10 ; i ++){
 			System.out.print(".");
 			
-			randEntries = Entry.generateRandomEntries(types, STRINGS, maxNumberEntries, 10);
-	        int randEntry = ThreadLocalRandom.current().nextInt(0, randEntries.size());
+	        int randValue = ThreadLocalRandom.current().nextInt(0, STRINGS.length);
+	        JSONObject obj1 = new JSONObject();
+	        obj1.append("element", STRINGS[randValue]);
 	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentry").request().async().post(Entity.entity(randEntries.get(randEntry),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentry").request().async().post(Entity.entity(obj1.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SE",status,msstring);
 	       
+	        List<String> vals = new ArrayList<String>();
+	        int randNrVals = ThreadLocalRandom.current().nextInt(0, 10);
+	        for(int j = 0 ; j < randNrVals ; j++){
+	        	int randIndex = ThreadLocalRandom.current().nextInt(0, STRINGS.length);
+	        	vals.add(STRINGS[randIndex]);
+	        }
+	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(vals,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SEOR",status,msstring);
-	        
+	       
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(vals,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SEAND",status,msstring);
-	        
+	        /* */
 		}
 		System.out.println();
 		fw.write(sb.toString());
@@ -357,7 +365,6 @@ public class Benchmarks {
 		
 		JSONObject jsonObj = new JSONObject();
 		JSONObject jsonObj2 = new JSONObject();
-		List<Entry> randEntries; 
 		boolean[] sums = getOpIndex("+");
 		boolean[] mults = getOpIndex("&");
 		boolean[] searchs = getOpIndex("=");
@@ -379,7 +386,6 @@ public class Benchmarks {
 		//100 search ops
 		for(int i = 0 ; i < 99 ; i ++){ //99 , pois quando chegar ao 98 , a keyTwo considera 98 +1 (99) que é a ultima
 			System.out.print(".");
-			randEntries = Entry.generateRandomEntries(types, STRINGS, maxNumberEntries, 10);
 			int randPosSums = randomPosition(sums);
 			
 			nanotimeStart = System.nanoTime();
@@ -437,18 +443,27 @@ public class Benchmarks {
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SNEQ",status,msstring);
 			
-	        int randEntry = ThreadLocalRandom.current().nextInt(0, randEntries.size());
+	        int randValue = ThreadLocalRandom.current().nextInt(0, STRINGS.length);
+	        JSONObject obj1 = new JSONObject();
+	        obj1.append("element", STRINGS[randValue]);
 	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentry").request().async().post(Entity.entity(randEntries.get(randEntry),MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentry").request().async().post(Entity.entity(obj1.toString(),MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
 	        msstring = String.format("%.7f",ms).replace(',','.');
 	        appendStringBuilder(benchmark,"SE",status,msstring);
 	       
+	        List<String> vals = new ArrayList<String>();
+	        int randNrVals = ThreadLocalRandom.current().nextInt(0, 10);
+	        for(int j = 0 ; j < randNrVals ; j++){
+	        	int randIndex = ThreadLocalRandom.current().nextInt(0, STRINGS.length);
+	        	vals.add(STRINGS[randIndex]);
+	        }
+	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryor").request().async().post(Entity.entity(vals,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;
@@ -456,7 +471,7 @@ public class Benchmarks {
 	        appendStringBuilder(benchmark,"SEOR",status,msstring);
 	        
 	        nanotimeStart = System.nanoTime();
-	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(randEntries,MediaType.APPLICATION_JSON));
+	        value = target.path("/server/searchentryand").request().async().post(Entity.entity(vals,MediaType.APPLICATION_JSON));
 	        status = value.get().getStatus();
 	        nanotimeEnd = System.nanoTime();
 	        ms = (nanotimeEnd-nanotimeStart) / 1000000.0f;

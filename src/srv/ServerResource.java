@@ -380,6 +380,7 @@ public class ServerResource {
 		                        		try{
 			                        		ReadResult res2 = (ReadResult)result;
 			        	            		Entry entry2 = res2.v();
+			        	            		System.out.println(pos);
 			        	            		BigInteger big1Code = (BigInteger) entry1.getElem(pos);
 			        	            		BigInteger big2Code = (BigInteger) entry2.getElem(pos); 
 			        	            		PaillierKey pk = (PaillierKey)conf.keys.get(pos).getKey(0);
@@ -642,21 +643,22 @@ public class ServerResource {
 		@Path("/searchentry")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public void searchEntry(Entry entry, @Suspended final AsyncResponse asyncResponse){
+		public void searchEntry(String json, @Suspended final AsyncResponse asyncResponse){
 			Entry specialEntry = new Entry();
+			JSONObject o = new JSONObject(json);
+			JSONArray jdata = o.getJSONArray("element");
+			Object val =(Object) jdata.get(0);
 			boolean[] searchables = conf.getOpIndex("%");
-			
-			List<Object> values = entry.values;
-			for(int i = 0 ; i < values.size() ; i ++){
-				if(values.get(i)!=null && searchables[i]){ //se for diferente de null e for um campo de % (search)
+			for(int i = 0 ; i < searchables.length ;i++){
+				if(searchables[i])
 					if(encrypt)
-						specialEntry.addCustomElem(conf.encryptElem(i, values.get(i)));
+						specialEntry.addCustomElem((String)conf.encryptElem(i, val));
 					else
-						specialEntry.addCustomElem(values.get(i));
-				}else{
+						specialEntry.addCustomElem(val);
+				else
 					specialEntry.addCustomElem(null);
-				}
 			}
+			
 			ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 			Timeout timeout = new Timeout(Duration.create(5, "seconds"));
 			SearchEntry sent = new SearchEntry(System.nanoTime(),specialEntry,encrypt);
@@ -686,22 +688,21 @@ public class ServerResource {
 		@Path("/searchentryor")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public void searchEntryOR(List<Entry> entries, @Suspended final AsyncResponse asyncResponse){
+		public void searchEntryOR(List<Object> vals, @Suspended final AsyncResponse asyncResponse){
 			List<Entry> auxEntries = new ArrayList<Entry>();
 			boolean[] searchables = conf.getOpIndex("%");
-			for(int i = 0 ; i < entries.size() ; i++){
-				Entry n = entries.get(i);
-				Entry specialEntry = new Entry();
-				List<Object> values = n.values;
-				for(int j = 0 ; j < values.size() ; j ++){
-					if(values.get(j)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
-						if(encrypt)
-							specialEntry.addCustomElem(conf.encryptElem(j, values.get(j)));
-						else
-							specialEntry.addCustomElem(values.get(j));
-					}else{
-						specialEntry.addCustomElem(null);
-					}
+			Entry specialEntry;
+			for(int i = 0 ; i < vals.size() ; i++){
+				specialEntry = new Entry();
+				for(int j = 0; j < conf.getTypes().length; j++){
+					if(vals.get(i)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
+						if(encrypt){
+							specialEntry.addCustomElem((String)conf.encryptElem(j, vals.get(i)));
+						}else
+								specialEntry.addCustomElem(vals.get(i));
+						}else{
+							specialEntry.addCustomElem(null);
+						}
 				}
 				auxEntries.add(specialEntry);
 			}
@@ -735,19 +736,18 @@ public class ServerResource {
 		@Path("/searchentryand")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ManagedAsync
-		public void searchEntryAND(List<Entry> entries, @Suspended final AsyncResponse asyncResponse){
+		public void searchEntryAND(List<Object> vals, @Suspended final AsyncResponse asyncResponse){
 			List<Entry> auxEntries = new ArrayList<Entry>();
 			boolean[] searchables = conf.getOpIndex("%");
-			for(int i = 0 ; i < entries.size() ; i++){
-				Entry n = entries.get(i);
-				Entry specialEntry = new Entry();
-				List<Object> values = n.values;
-				for(int j = 0 ; j < values.size() ; j ++){
-					if(values.get(j)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
+			Entry specialEntry;
+			for(int i = 0 ; i < vals.size() ; i++){
+				specialEntry = new Entry();
+				for(int j = 0; j < conf.getTypes().length; j++){
+					if(vals.get(i)!=null && searchables[j]){ //se for diferente de null e for um campo de % (search)
 						if(encrypt)
-							specialEntry.addCustomElem(conf.encryptElem(j, values.get(j)));
+							specialEntry.addCustomElem((String)conf.encryptElem(j, vals.get(i)));
 						else
-							specialEntry.addCustomElem(values.get(j));
+							specialEntry.addCustomElem(vals.get(i));
 					}else{
 						specialEntry.addCustomElem(null);
 					}
