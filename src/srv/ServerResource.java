@@ -93,7 +93,7 @@ public class ServerResource {
 		
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",n);
+		APIWrite write = new APIWrite(System.nanoTime(), key,requester,n);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -147,6 +147,7 @@ public class ServerResource {
 	@POST
 	@Path("/addelem")
 	public void addElem(@HeaderParam("key") String key,@Suspended final AsyncResponse asyncResponse){
+		String requester = request.get().getRemoteAddr();
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
@@ -167,7 +168,7 @@ public class ServerResource {
             		if (entry == null)
             			entry = new Entry();
             		entry.addElem();
-            		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",entry);
+            		APIWrite write = new APIWrite(System.nanoTime(), key,requester,entry);
             		Future<Object> future = Patterns.ask(proxy, write, timeout);
             		future.onComplete(new OnComplete<Object>() {
 
@@ -192,10 +193,11 @@ public class ServerResource {
 	@DELETE
 	@Path("/removeset")
 	public void removeSet(@HeaderParam("key") String key,@Suspended final AsyncResponse asyncResponse){
+		String requester = request.get().getRemoteAddr();
 		ActorSelection proxy = actorSystem.actorSelection("/user/proxy");
 		Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 		
-		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",null);
+		APIWrite write = new APIWrite(System.nanoTime(), key,requester,null);
 		Future<Object> future = Patterns.ask(proxy, write, timeout);
 		future.onComplete(new OnComplete<Object>() {
 
@@ -254,7 +256,7 @@ public class ServerResource {
 	            			else
 	            				entry.values.add(pos,obj);
 	            		}
-	            		APIWrite write = new APIWrite(System.nanoTime(), key,"clientidip",entry);
+	            		APIWrite write = new APIWrite(System.nanoTime(), key,requester,entry);
 	            		Future<Object> future = Patterns.ask(proxy, write, timeout);
 	            		future.onComplete(new OnComplete<Object>() {
 	
