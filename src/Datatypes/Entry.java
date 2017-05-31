@@ -90,15 +90,5 @@ public class Entry implements Serializable{
 				res.addCustomElem(1+r.nextInt(maxInt));
 		return res;
 	}
-	
-	public static List<Entry> generateRandomEntries(Object[] types,String[] strings,int maxList, int maxInt){
-		Entry n ;
-		ArrayList<Entry> entries = new ArrayList<Entry>();
-		for(int j = 0 ; j < maxList ; j++){
-			n = Entry.randomEntry(types,strings , maxInt);
-			entries.add(n);
-		}
-		return entries;
-	}
 
 }

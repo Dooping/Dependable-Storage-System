@@ -287,62 +287,38 @@ public class ClientGet0 {
 							System.err.println("Searchneq not allowed in position: "+posSearchneq+ ".  Allowed operation on this position: "+ops[posSearchneq]);
 						}break;
 					case "7":
-						System.out.println("[entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
+						System.out.println("[val 1]");
 						String res7 = br.readLine();
-						String[] parts7 = res7.split(" ");
-						Entry n7 = new Entry();
-						for(int i = 0; i < parts7.length; i++){
-							if(allowedTypes[i] instanceof Integer)
-								n7.addCustomElem(null); 
-							else
-								n7.addCustomElem(parts7[i]);
-						}
-						Future<Response> searchentry = target.path("/server/searchentry").request().async().post(Entity.entity(n7,MediaType.APPLICATION_JSON));
+						JSONObject jsobj3 = new JSONObject();
+						jsobj3.append("element",res7);
+						Future<Response> searchentry = target.path("/server/searchentry").request().async().post(Entity.entity(jsobj3.toString(),MediaType.APPLICATION_JSON));
 						List<String> seqlist3 = searchentry.get().readEntity(new GenericType<List<String>>(){});
 						for(String seqentry : seqlist3)
 							System.out.println("Call: /server/searchentry ; Response: " + seqentry.toString());
 						
 						break;
 					case "8":
-						System.out.println("[number of entries]");
-						int nrEntries = Integer.parseInt(br.readLine());
-						List<Entry> entries = new ArrayList<Entry>();
-						for(int i = 0; i < nrEntries; i++){
-							Entry entryOR = new Entry();
-							System.out.println("(Entry "+ (i+1) +"/"+nrEntries+ ") [entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
-							String entryLine = br.readLine();
-							String[] entryParts = entryLine.split(" ");
-							for(int j = 0 ; j < entryParts.length ; j ++){
-								if(allowedTypes[j] instanceof Integer)
-									entryOR.addCustomElem(Integer.parseInt(entryParts[j])); 
-								else
-									entryOR.addCustomElem(entryParts[j]);
-							}
-							entries.add(entryOR);
-						}
-						Future<Response> searchentryor = target.path("/server/searchentryor").request().async().post(Entity.entity(entries,MediaType.APPLICATION_JSON));
+						System.out.println("[val 1] [val 2] ... [val n]");
+						String or = br.readLine();
+						String orparts[] = or.split(" ");
+						int nrValues = orparts.length;
+						List<Object> vals = new ArrayList<Object>();
+						for(int i = 0; i < nrValues; i++)
+							vals.add(orparts[i]);
+						Future<Response> searchentryor = target.path("/server/searchentryor").request().async().post(Entity.entity(vals,MediaType.APPLICATION_JSON));
 						List<String> seqlist4 = searchentryor.get().readEntity(new GenericType<List<String>>(){});
 						for(String seqentry : seqlist4)
 							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
 						break;
 					case "9":
-						System.out.println("[number of entries]");
-						int nrEntriesAnd = Integer.parseInt(br.readLine());
-						List<Entry> entriesAnd = new ArrayList<Entry>();
-						for(int i = 0; i < nrEntriesAnd; i++){
-							Entry entryAND = new Entry();
-							System.out.println("(Entry "+ (i+1) +"/"+nrEntriesAnd+ ") [entry val 1] [entry val 2] ... [entry val "+allowedTypes.length+"]");
-							String entryLine = br.readLine();
-							String[] entryParts = entryLine.split(" ");
-							for(int j = 0 ; j < entryParts.length ; j ++){
-								if(allowedTypes[j] instanceof Integer)
-									entryAND.addCustomElem(Integer.parseInt(entryParts[j])); 
-								else
-									entryAND.addCustomElem(entryParts[j]);
-							}
-							entriesAnd.add(entryAND);
-						}
-						Future<Response> searchentryand = target.path("/server/searchentryand").request().async().post(Entity.entity(entriesAnd,MediaType.APPLICATION_JSON));
+						System.out.println("[val 1] [val 2] ... [val n]");
+						String and = br.readLine();
+						String andparts[] = and.split(" ");
+						int nrAndValues = andparts.length;
+						List<Object> andVals = new ArrayList<Object>();
+						for(int i = 0; i < nrAndValues; i++)
+							andVals.add(andparts[i]);
+						Future<Response> searchentryand = target.path("/server/searchentryand").request().async().post(Entity.entity(andVals,MediaType.APPLICATION_JSON));
 						List<String> seqlist5 = searchentryand.get().readEntity(new GenericType<List<String>>(){});
 						for(String seqentry : seqlist5)
 							System.out.println("Call: /server/searchentryor ; Response: " + seqentry.toString());
