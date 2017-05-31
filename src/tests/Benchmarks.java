@@ -84,7 +84,7 @@ public class Benchmarks {
 		long nanotimeStart,nanotimeEnd ;
 		int status;
 		for(int i = 0 ; i < 100 ; i ++){
-			System.out.println(".");
+			System.out.print(".");
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/getset")
 					.request()
@@ -115,7 +115,7 @@ public class Benchmarks {
 		
 		//50 PUTSET & 50 GESET ALTER
 		for(int i = 0 ; i < 50 ; i ++){
-			System.out.println(".");
+			System.out.print(".");
 			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")
@@ -159,7 +159,7 @@ public class Benchmarks {
 		
 		//50 ADDELEM & 50 READELEM ALTER
 		for(int i = 0 ; i < 50 ; i ++){
-			System.out.println(".");
+			System.out.print(".");
 			//ADDELEM
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/addelem")
@@ -202,7 +202,7 @@ public class Benchmarks {
 		
 		//10 PUTSETS 10 GETSETS 10 ADDELEMENTS 10 WRITEELEMS 10 READELEMS
 		for(int i = 0 ; i < 30 ; i ++){
-			System.out.println(".");
+			System.out.print(".");
 			//PUTSET
 			nanotimeStart = System.nanoTime();
 			value = target.path("/server/putset")

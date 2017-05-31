@@ -87,7 +87,7 @@ public class Entry implements Serializable{
 			if(o instanceof String)
 				res.addCustomElem(strings[r.nextInt(l)]);
 			else
-				res.addCustomElem(1+r.nextInt(maxInt));
+				res.addCustomElem(2+r.nextInt(maxInt));
 		return res;
 	}
 
