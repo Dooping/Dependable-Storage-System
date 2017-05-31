@@ -84,6 +84,7 @@ public class EntryConfig {
 		
 		KeyStorage clientKey = keys.get(client);
 		
+		if(pos<ops.length)
 			switch(ops[pos]){
 			case EntryConfig.DETERMINISTIC_EQUIV:
 			case EntryConfig.DETERMINISTIC_EQUAL:
@@ -132,53 +133,53 @@ public class EntryConfig {
 		
 		int auxInt = 0;
 		String auxString = "";
-		
-		if(types[pos] instanceof Integer)
-			auxInt = (int)elem;
-		else
-			auxString = (String)elem;
-		
-		switch(ops[pos]){
-		case EntryConfig.DETERMINISTIC_EQUIV:
-		case EntryConfig.DETERMINISTIC_EQUAL:
-			SecretKey dkey = (SecretKey)clientKey.getKey(pos);
-			return HomoDet.encrypt(dkey, auxString);
-		case EntryConfig.ORDER_GREAT:
-		case EntryConfig.ORDER_LESS_EQUAL:
-		case EntryConfig.ORDER_GREAT_EQUAL:
-		case EntryConfig.ORDER_LESS:
-			long okey = (long)clientKey.getKey(pos);
-			HomoOpeInt ope = new HomoOpeInt(okey);
-			return ope.encrypt(auxInt);
-		case EntryConfig.SEARCHABLE:
-			SecretKey skey = (SecretKey)clientKey.getKey(pos); 
-			return HomoSearch.encrypt(skey, auxString);
-		case EntryConfig.PAILIER:
-			try{
-				BigInteger big;
-				PaillierKey pkey = (PaillierKey)clientKey.getKey(pos); 
-				big = new BigInteger(Integer.toString(auxInt));
-				return HomoAdd.encrypt(big, pkey);
-			}catch(Exception e){
-				e.printStackTrace();
+		if(pos<types.length)
+			if(types[pos] instanceof Integer)
+				auxInt = (int)elem;
+			else
+				auxString = (String)elem;
+		if(pos<ops.length)
+			switch(ops[pos]){
+			case EntryConfig.DETERMINISTIC_EQUIV:
+			case EntryConfig.DETERMINISTIC_EQUAL:
+				SecretKey dkey = (SecretKey)clientKey.getKey(pos);
+				return HomoDet.encrypt(dkey, auxString);
+			case EntryConfig.ORDER_GREAT:
+			case EntryConfig.ORDER_LESS_EQUAL:
+			case EntryConfig.ORDER_GREAT_EQUAL:
+			case EntryConfig.ORDER_LESS:
+				long okey = (long)clientKey.getKey(pos);
+				HomoOpeInt ope = new HomoOpeInt(okey);
+				return ope.encrypt(auxInt);
+			case EntryConfig.SEARCHABLE:
+				SecretKey skey = (SecretKey)clientKey.getKey(pos); 
+				return HomoSearch.encrypt(skey, auxString);
+			case EntryConfig.PAILIER:
+				try{
+					BigInteger big;
+					PaillierKey pkey = (PaillierKey)clientKey.getKey(pos); 
+					big = new BigInteger(Integer.toString(auxInt));
+					return HomoAdd.encrypt(big, pkey);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				break;
+			case EntryConfig.RSA:
+				BigInteger bigOne;
+				RSAPublicKey rsaPublicKey = (RSAPublicKey)((KeyPair)clientKey.getKey(pos)).getPublic();
+				bigOne = new BigInteger(Integer.toString(auxInt));
+				return HomoMult.encrypt(rsaPublicKey,bigOne);
+			case EntryConfig.RAND:
+				try{
+					Object[] arr = (Object[])clientKey.getKey(pos);
+					SecretKey randKey = (SecretKey) arr[0];
+					byte[] iv = (byte[])arr[1];
+					return HomoRand.encrypt(randKey, iv, auxString);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				break;
 			}
-			break;
-		case EntryConfig.RSA:
-			BigInteger bigOne;
-			RSAPublicKey rsaPublicKey = (RSAPublicKey)((KeyPair)clientKey.getKey(pos)).getPublic();
-			bigOne = new BigInteger(Integer.toString(auxInt));
-			return HomoMult.encrypt(rsaPublicKey,bigOne);
-		case EntryConfig.RAND:
-			try{
-				Object[] arr = (Object[])clientKey.getKey(pos);
-				SecretKey randKey = (SecretKey) arr[0];
-				byte[] iv = (byte[])arr[1];
-				return HomoRand.encrypt(randKey, iv, auxString);
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-			break;
-		}
 		return elem;
 		
 	
