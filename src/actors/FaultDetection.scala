@@ -45,25 +45,26 @@ class FaultDetection(threshold: Int) extends Actor{
       sender ! NewReplicaList(replicas.toList)
     }
     case Vote(replica) => {
-      println(sender.path + " voted for replica: " + replica.path)
-      votes+=(replica -> (votes(replica)+1))
-      if(votes(replica) >= threshold){
-        replicas -= replica
-        if(!sentinent.isEmpty){
-          val rep = sentinent.toVector(rnd.nextInt(sentinent.size))
-          rep ! SetActiveReplica()
-          sentinentSync(rep).cancel()
-          val syncRep = replicas.toVector(rnd.nextInt(replicas.size))
-          rep ! SyncRequest(syncRep)
-          replicas += rep
-          sentinent -= rep
-          proxys.foreach(p => p ! NewReplicaList(replicas.toList))
+      if(replicas.contains(replica)){
+        println(sender.path + " voted for replica: " + replica.path)
+        votes+=(replica -> (votes(replica)+1))
+        if(votes(replica) == threshold){
+          replicas -= replica
+          if(!sentinent.isEmpty){
+            val rep = sentinent.toVector(rnd.nextInt(sentinent.size))
+            rep ! SetActiveReplica()
+            sentinentSync(rep).cancel()
+            val syncRep = replicas.toVector(rnd.nextInt(replicas.size))
+            rep ! SyncRequest(syncRep)
+            replicas += rep
+            sentinent -= rep
+            proxys.foreach(p => p ! NewReplicaList(replicas.toList))
+          }
+          //send signal to create another sentient?
+          val newSentSpawner = context.actorSelection(replicas.toVector(rnd.nextInt(replicas.size)).path.parent)
+          newSentSpawner ! NewSentinent()
         }
-        //send signal to create another sentient?
-        val newSentSpawner = context.actorSelection(replicas.toVector(rnd.nextInt(replicas.size)).path.parent)
-        newSentSpawner ! NewSentinent()
       }
-        
     }
     case _ => println("other message")
   }
